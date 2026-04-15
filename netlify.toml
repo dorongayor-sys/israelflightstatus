@@ -1,0 +1,36 @@
+[build]
+  base = "frontend"
+  publish = "dist"
+  command = "npm run build"
+
+# API routes → Netlify Functions
+[[redirects]]
+  from = "/api/auth/login"
+  to = "/.netlify/functions/auth-login"
+  status = 200
+
+[[redirects]]
+  from = "/api/airlines/:id"
+  to = "/.netlify/functions/airline"
+  status = 200
+
+[[redirects]]
+  from = "/api/airlines"
+  to = "/.netlify/functions/airlines"
+  status = 200
+
+[[redirects]]
+  from = "/api/changelog"
+  to = "/.netlify/functions/changelog"
+  status = 200
+
+[[redirects]]
+  from = "/api/last-sync"
+  to = "/.netlify/functions/last-sync"
+  status = 200
+
+# React Router — send all other routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
