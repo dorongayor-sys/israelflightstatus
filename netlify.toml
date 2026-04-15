@@ -29,6 +29,11 @@
   to = "/.netlify/functions/last-sync"
   status = 200
 
+[[redirects]]
+  from = "/api/sync"
+  to = "/.netlify/functions/sync"
+  status = 200
+
 # React Router — send all other routes to index.html
 [[redirects]]
   from = "/*"
