@@ -1,5 +1,5 @@
-const { getStore } = require('@netlify/blobs');
 const jwt = require('jsonwebtoken');
+const { runFullSync } = require('./_syncLogic');
 
 const HEADERS = {
   'Content-Type': 'application/json',
@@ -24,9 +24,6 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: HEADERS, body: JSON.stringify({ error: 'Method not allowed' }) };
   if (!verifyToken(event)) return { statusCode: 401, headers: HEADERS, body: JSON.stringify({ error: 'Unauthorized' }) };
 
-  const store = getStore({ name: 'aviation', siteID: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_TOKEN });
-  const now = new Date().toISOString();
-  await store.set('last-sync', now);
-
-  return { statusCode: 200, headers: HEADERS, body: JSON.stringify({ ok: true, last_sync: now }) };
+  const result = await runFullSync();
+  return { statusCode: 200, headers: HEADERS, body: JSON.stringify(result) };
 };
