@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/manage-x7k2" replace />;
   return children;
 }
 
@@ -14,7 +14,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<PublicView />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/manage-x7k2" element={<Login />} />
         <Route
           path="/admin"
           element={

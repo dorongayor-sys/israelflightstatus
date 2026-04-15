@@ -17,7 +17,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (localStorage.getItem('token')) navigate('/admin');
+    if (localStorage.getItem('token')) navigate('/admin', { replace: true });
   }, [navigate]);
 
   const handleSubmit = async (e) => {

@@ -53,16 +53,7 @@ export default function Navbar({ isAdmin = false }) {
                   Logout
                 </button>
               </>
-            ) : (
-              location.pathname !== '/login' && (
-                <Link
-                  to="/admin"
-                  className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-                >
-                  Admin
-                </Link>
-              )
-            )}
+            ) : null}
           </div>
 
         </div>
