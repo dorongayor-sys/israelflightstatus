@@ -4,6 +4,7 @@ import AirlineForm from '../components/AirlineForm';
 import StatusBadge from '../components/StatusBadge';
 import ChangeLog from '../components/ChangeLog';
 import api from '../api/client';
+import staticData from '../data/airlines-static.json';
 
 function Modal({ title, onClose, children }) {
   useEffect(() => {
@@ -63,8 +64,12 @@ export default function Dashboard() {
       ]);
       setAirlines(airlinesRes.data || []);
       setChangelog(changelogRes.data || []);
-    } catch {
-      setError('Failed to load data. Please refresh.');
+    } catch (err) {
+      console.error('fetchAll error:', err?.response?.status, err?.response?.data, err?.message);
+      // Fall back to static data so the dashboard is usable
+      setAirlines(staticData.airlines || []);
+      setChangelog(staticData.changelog || []);
+      setError('Live data unavailable — showing cached snapshot. Changes may not save.');
     } finally {
       setLoading(false);
     }
