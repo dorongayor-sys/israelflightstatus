@@ -9,8 +9,12 @@ const HEADERS = {
   'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
 };
 
+function getAviationStore() {
+  return getStore({ name: 'aviation', siteID: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_TOKEN });
+}
+
 async function getAirlines() {
-  const store = getStore('aviation');
+  const store = getAviationStore();
   const data = await store.get('airlines', { type: 'json' });
   if (data === null) {
     await store.set('airlines', JSON.stringify(staticData.airlines));
@@ -45,7 +49,7 @@ exports.handler = async (event) => {
 
   if (!verifyToken(event)) return { statusCode: 401, headers: HEADERS, body: JSON.stringify({ error: 'Unauthorized' }) };
 
-  const store = getStore('aviation');
+  const store = getAviationStore();
 
   if (event.httpMethod === 'PUT') {
     const airlines = await getAirlines();
