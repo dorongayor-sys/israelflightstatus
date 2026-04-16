@@ -21,8 +21,14 @@ function parseDotDate(str) {
   if (!m) return null;
   const day = parseInt(m[1], 10), month = parseInt(m[2], 10);
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  const now = new Date();
-  const year = month >= now.getMonth() + 1 ? now.getFullYear() : now.getFullYear() + 1;
+  // Use Israel timezone for current date to avoid UTC midnight edge cases
+  const israelToday = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  const todayYear = parseInt(israelToday.slice(0, 4));
+  const todayMonth = parseInt(israelToday.slice(5, 7));
+  // Roll over to next year only if we're in the second half (Jul+) and date is in Jan-Mar,
+  // indicating a date that wraps around year end. All other past dates stay in current year
+  // so they are correctly treated as expired rather than being pushed 1 year into the future.
+  const year = (todayMonth >= 7 && month <= 3) ? todayYear + 1 : todayYear;
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
@@ -181,11 +187,12 @@ async function runEshetSync(airlines) {
 // ── Date-based status sync ─────────────────────────────────────────────────
 
 function runDateBasedStatusSync(airlines) {
-  const today = new Date().toISOString().slice(0, 10);
+  // Use Israel timezone so the flip happens at midnight Israel time, not UTC midnight
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   let updated = 0;
   for (let i = 0; i < airlines.length; i++) {
     const a = airlines[i];
-    if (a.status === 'not_flying' && !a.sync_locked && a.cancellation_end_date && a.cancellation_end_date < today) {
+    if (a.status === 'not_flying' && !a.sync_locked && a.cancellation_end_date && a.cancellation_end_date <= today) {
       console.log(`[DateSync] ${a.name}: not_flying → flying (date ${a.cancellation_end_date} reached)`);
       airlines[i] = { ...a, status: 'flying', updated_at: new Date().toISOString() };
       updated++;

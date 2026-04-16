@@ -134,7 +134,7 @@ const FILTERS = [
         {/* Hero */}
         <div className="mb-10">
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
-            Israel Flight Status
+            Israel Flights Status
           </h1>
           <p className="text-slate-400 text-base max-w-none">
             Live tracking of airlines flying to and from Tel Aviv Ben Gurion Airport (TLV).
@@ -182,19 +182,19 @@ const FILTERS = [
           </div>
 
           {/* Filter pills */}
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto pb-0.5">
             {FILTERS.map(({ value, label, count }) => (
               <button
                 key={value}
                 onClick={() => setFilter(value)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`px-2 sm:px-3 py-1.5 sm:py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
                   filter === value
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                     : 'bg-slate-900 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
                 }`}
               >
                 {label}
-                <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
+                <span className={`ml-1 sm:ml-1.5 px-1 sm:px-1.5 py-0.5 rounded-full text-xs ${
                   filter === value ? 'bg-blue-500/40 text-blue-200' : 'bg-slate-800 text-slate-500'
                 }`}>
                   {count}

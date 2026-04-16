@@ -30,7 +30,7 @@ export default function Navbar({ isAdmin = false }) {
             </div>
             <div>
               <span className="text-sm font-bold text-white leading-none">Aviation Updates</span>
-              <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flight Status</p>
+              <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flights Status</p>
             </div>
           </Link>
 
