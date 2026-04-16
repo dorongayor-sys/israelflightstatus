@@ -38,9 +38,9 @@ export default function Navbar({ isAdmin = false }) {
             href="https://t.me/AviationupdatesDG"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-slate-400 hover:text-blue-400 transition-colors hidden sm:block"
+            className="text-xs text-slate-400 hidden sm:block"
           >
-            For more information follow us on Telegram
+            For more information <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
           </a>
 
           <div className="flex items-center gap-1.5">
