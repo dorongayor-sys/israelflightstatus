@@ -34,6 +34,15 @@ export default function Navbar({ isAdmin = false }) {
             </div>
           </Link>
 
+          <a
+            href="https://t.me/AviationupdatesDG"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-slate-400 hover:text-blue-400 transition-colors hidden sm:block"
+          >
+            For more information follow us on Telegram
+          </a>
+
           <div className="flex items-center gap-1.5">
             {isAdmin ? (
               <>
