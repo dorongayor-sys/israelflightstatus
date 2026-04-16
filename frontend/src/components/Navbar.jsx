@@ -24,26 +24,25 @@ export default function Navbar({ isAdmin = false }) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
 
-          <div className="flex items-center gap-5">
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 bg-blue-500/15 rounded-lg flex items-center justify-center border border-blue-500/25 group-hover:bg-blue-500/25 transition-colors">
-                <PlaneIcon />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-sm font-bold text-white leading-none">Aviation Updates</span>
-                <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flights Status</p>
-              </div>
-            </Link>
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 bg-blue-500/15 rounded-lg flex items-center justify-center border border-blue-500/25 group-hover:bg-blue-500/25 transition-colors">
+              <PlaneIcon />
+            </div>
+            <div className="hidden sm:block">
+              <span className="text-sm font-bold text-white leading-none">Aviation Updates</span>
+              <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flights Status</p>
+            </div>
+          </Link>
 
-            <a
-              href="https://t.me/AviationupdatesDG"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-slate-400"
-            >
-              For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
-            </a>
-          </div>
+          {/* Telegram link — centered on desktop, near icon on mobile */}
+          <a
+            href="https://t.me/AviationupdatesDG"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-slate-400 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+          >
+            For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
+          </a>
 
           <div className="flex items-center gap-1.5">
             {isAdmin ? (
