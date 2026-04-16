@@ -55,7 +55,7 @@ function StatCard({ count, label, color, tooltip }) {
       <div className={`text-3xl font-bold ${c.num} tabular-nums`}>{count}</div>
       <div className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wider">{label}</div>
       {show && tooltip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-xl px-3 py-2.5 shadow-xl z-10 leading-relaxed text-left pointer-events-none">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 max-w-[calc(100vw-2rem)] bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-xl px-3 py-2.5 shadow-xl z-10 leading-relaxed text-left pointer-events-none">
           {tooltip}
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-700" />
         </div>
@@ -133,7 +133,7 @@ const FILTERS = [
 
         {/* Hero */}
         <div className="mb-10">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
             Israel Flight Status
           </h1>
           <p className="text-slate-400 text-base max-w-none">

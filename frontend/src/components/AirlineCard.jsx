@@ -143,85 +143,81 @@ export default function AirlineCard({ airline }) {
     <>
       <div
         onClick={() => setOpen(true)}
-        className={`cursor-pointer bg-slate-900 rounded-xl border border-slate-800 border-l-4 ${BORDER[airline.status] || 'border-l-slate-600'} p-5 hover:bg-slate-800/70 transition-colors duration-150`}
+        className={`cursor-pointer bg-slate-900 rounded-xl border border-slate-800 border-l-4 ${BORDER[airline.status] || 'border-l-slate-600'} p-4 hover:bg-slate-800/70 transition-colors duration-150`}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-
-            {/* Name row */}
-            <div className="flex items-center gap-2 mb-3">
-              <AirlineLogo iataCode={airline.iata_code} />
-              {airline.iata_code && (
-                <span className="text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded tracking-widest">
-                  {airline.iata_code}
-                </span>
-              )}
-              <h3 className="font-semibold text-white text-base leading-tight truncate">
-                {airline.name}
-              </h3>
-            </div>
-
-            {/* Routes — flying or partial */}
-            {(airline.status === 'flying' || airline.status === 'partial') && airline.destinations?.length > 0 && (
-              <div className="mb-2">
-                <p className="text-sm text-slate-500 mb-1.5 uppercase tracking-wider font-semibold">Routes:</p>
-                <div className="flex flex-wrap gap-1">
-                  {airline.destinations.map((dest, i) => (
-                    <span key={i} className="text-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-mono">
-                      {dest}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        {/* Name row + status badge */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <AirlineLogo iataCode={airline.iata_code} />
+            {airline.iata_code && (
+              <span className="text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded tracking-widest flex-shrink-0">
+                {airline.iata_code}
+              </span>
             )}
-
-            {/* Cancellation info — not_flying */}
-            {airline.status === 'not_flying' && (
-              <div className="space-y-1">
-                {airline.cancellation_reason && (
-                  <p className="text-sm text-slate-400 leading-snug">
-                    <span className="text-slate-500 uppercase tracking-wider text-sm font-semibold mr-1.5">Reason:</span>
-                    {airline.cancellation_reason}
-                  </p>
-                )}
-                {airline.cancellation_end_date ? (
-                  <p className="text-sm">
-                    <span className="text-slate-500 uppercase tracking-wider font-semibold mr-1.5">Until:</span>
-                    <span className="text-red-400 font-medium">{formatDate(airline.cancellation_end_date)}</span>
-                    {!!airline.end_date_unconfirmed && (
-                      <span className="text-slate-500 font-normal ml-1">(unconfirmed)</span>
-                    )}
-                  </p>
-                ) : (
-                  <p className="text-sm text-red-500/60 font-medium">No end date announced</p>
-                )}
-                {airline.terminal && (
-                  <p className="text-sm text-slate-500">
-                    <span className="uppercase tracking-wider font-semibold mr-1.5">Terminal:</span>
-                    <span className="text-slate-300 font-medium">{airline.terminal}</span>
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Terminal — flying or partial */}
-            {airline.status !== 'not_flying' && airline.terminal && (
-              <p className="text-sm text-slate-500 mt-2">
-                <span className="uppercase tracking-wider font-semibold mr-1.5">Terminal:</span>
-                <span className="text-slate-300 font-medium">{airline.terminal}</span>
-              </p>
-            )}
-
-            {/* Notes */}
-            {airline.notes && (
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed line-clamp-2">{airline.notes}</p>
-            )}
+            <h3 className="font-semibold text-white text-base leading-tight truncate">
+              {airline.name}
+            </h3>
           </div>
-
           <div className="flex-shrink-0">
             <StatusBadge status={airline.status} />
           </div>
         </div>
+
+        {/* Routes — flying or partial */}
+        {(airline.status === 'flying' || airline.status === 'partial') && airline.destinations?.length > 0 && (
+          <div className="mb-2">
+            <p className="text-sm text-slate-500 mb-1.5 uppercase tracking-wider font-semibold">Routes:</p>
+            <div className="flex flex-wrap gap-1">
+              {airline.destinations.map((dest, i) => (
+                <span key={i} className="text-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-mono break-all">
+                  {dest}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Cancellation info — not_flying */}
+        {airline.status === 'not_flying' && (
+          <div className="space-y-1">
+            {airline.cancellation_reason && (
+              <p className="text-sm text-slate-400 leading-snug">
+                <span className="text-slate-500 uppercase tracking-wider text-sm font-semibold mr-1.5">Reason:</span>
+                {airline.cancellation_reason}
+              </p>
+            )}
+            {airline.cancellation_end_date ? (
+              <p className="text-sm">
+                <span className="text-slate-500 uppercase tracking-wider font-semibold mr-1.5">Until:</span>
+                <span className="text-red-400 font-medium">
+                  {!!airline.end_date_unconfirmed && <span className="text-slate-500 mr-0.5">~</span>}
+                  {formatDate(airline.cancellation_end_date)}
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm text-red-500/60 font-medium">No end date announced</p>
+            )}
+            {airline.terminal && (
+              <p className="text-sm text-slate-500">
+                <span className="uppercase tracking-wider font-semibold mr-1.5">Terminal:</span>
+                <span className="text-slate-300 font-medium">{airline.terminal}</span>
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Terminal — flying or partial */}
+        {airline.status !== 'not_flying' && airline.terminal && (
+          <p className="text-sm text-slate-500 mt-2">
+            <span className="uppercase tracking-wider font-semibold mr-1.5">Terminal:</span>
+            <span className="text-slate-300 font-medium">{airline.terminal}</span>
+          </p>
+        )}
+
+        {/* Notes */}
+        {airline.notes && (
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed line-clamp-2">{airline.notes}</p>
+        )}
       </div>
 
       {open && <AirlineModal airline={airline} onClose={() => setOpen(false)} />}

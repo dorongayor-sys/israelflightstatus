@@ -148,14 +148,14 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
             <p className="text-slate-500 text-sm mt-0.5">
               {airlines.length} airlines · {counts.flying} flying · {counts.partial} partial · {counts.not_flying} not flying
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={handleSync}
               disabled={syncing}
@@ -278,7 +278,7 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => { setEditingAirline(airline); setShowAddForm(false); }}
                                 className="text-xs text-blue-400 hover:text-blue-300 px-2.5 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors font-medium"
