@@ -40,7 +40,7 @@ export default function Navbar({ isAdmin = false }) {
             rel="noopener noreferrer"
             className="text-xs text-slate-400 hidden sm:block"
           >
-            For more information <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
+            For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
           </a>
 
           <div className="flex items-center gap-1.5">
