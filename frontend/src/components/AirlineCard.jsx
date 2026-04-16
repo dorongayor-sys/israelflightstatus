@@ -189,10 +189,10 @@ export default function AirlineCard({ airline }) {
             {airline.cancellation_end_date ? (
               <p className="text-sm">
                 <span className="text-slate-500 uppercase tracking-wider font-semibold mr-1.5">Until:</span>
-                <span className="text-red-400 font-medium">
-                  {!!airline.end_date_unconfirmed && <span className="text-slate-500 mr-0.5">~</span>}
-                  {formatDate(airline.cancellation_end_date)}
-                </span>
+                <span className="text-red-400 font-medium">{formatDate(airline.cancellation_end_date)}</span>
+                {!!airline.end_date_unconfirmed && (
+                  <span className="block sm:inline text-slate-500 font-normal sm:ml-1">(unconfirmed)</span>
+                )}
               </p>
             ) : (
               <p className="text-sm text-red-500/60 font-medium">No end date announced</p>
