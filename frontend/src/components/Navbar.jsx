@@ -24,24 +24,26 @@ export default function Navbar({ isAdmin = false }) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
 
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-blue-500/15 rounded-lg flex items-center justify-center border border-blue-500/25 group-hover:bg-blue-500/25 transition-colors">
-              <PlaneIcon />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-white leading-none">Aviation Updates</span>
-              <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flights Status</p>
-            </div>
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 bg-blue-500/15 rounded-lg flex items-center justify-center border border-blue-500/25 group-hover:bg-blue-500/25 transition-colors">
+                <PlaneIcon />
+              </div>
+              <div>
+                <span className="text-sm font-bold text-white leading-none">Aviation Updates</span>
+                <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flights Status</p>
+              </div>
+            </Link>
 
-          <a
-            href="https://t.me/AviationupdatesDG"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-slate-400 hidden sm:block"
-          >
-            For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
-          </a>
+            <a
+              href="https://t.me/AviationupdatesDG"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-400 hidden sm:block"
+            >
+              For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
+            </a>
+          </div>
 
           <div className="flex items-center gap-1.5">
             {isAdmin ? (
