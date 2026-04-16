@@ -39,7 +39,7 @@ export default function Navbar({ isAdmin = false }) {
             href="https://t.me/AviationupdatesDG"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-slate-400 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+            className="text-sm text-slate-400 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
           >
             For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
           </a>
