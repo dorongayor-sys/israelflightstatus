@@ -29,7 +29,7 @@ export default function Navbar({ isAdmin = false }) {
               <div className="w-8 h-8 bg-blue-500/15 rounded-lg flex items-center justify-center border border-blue-500/25 group-hover:bg-blue-500/25 transition-colors">
                 <PlaneIcon />
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <span className="text-sm font-bold text-white leading-none">Aviation Updates</span>
                 <p className="text-xs text-slate-500 leading-none mt-0.5">Israel Flights Status</p>
               </div>
