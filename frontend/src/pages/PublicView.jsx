@@ -30,7 +30,7 @@ function InfoIcon() {
   );
 }
 
-function StatCard({ count, label, color, tooltip }) {
+function StatCard({ count, label, color, tooltip, tooltipAlign = 'center' }) {
   const [show, setShow] = useState(false);
   const colors = {
     green: { num: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
@@ -55,9 +55,17 @@ function StatCard({ count, label, color, tooltip }) {
       <div className={`text-3xl font-bold ${c.num} tabular-nums`}>{count}</div>
       <div className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wider">{label}</div>
       {show && tooltip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 max-w-[calc(100vw-2rem)] bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-xl px-3 py-2.5 shadow-xl z-10 leading-relaxed text-left pointer-events-none">
+        <div className={`absolute bottom-full mb-2 w-52 max-w-[calc(100vw-2rem)] bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-xl px-3 py-2.5 shadow-xl z-10 leading-relaxed text-left pointer-events-none ${
+          tooltipAlign === 'left'  ? 'right-0' :
+          tooltipAlign === 'right' ? 'left-0'  :
+          'left-1/2 -translate-x-1/2'
+        }`}>
           {tooltip}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-700" />
+          <div className={`absolute top-full border-4 border-transparent border-t-slate-700 ${
+            tooltipAlign === 'left'  ? 'right-4' :
+            tooltipAlign === 'right' ? 'left-4'  :
+            'left-1/2 -translate-x-1/2'
+          }`} />
         </div>
       )}
     </div>
@@ -158,9 +166,9 @@ const FILTERS = [
         {/* Stats */}
         {!loading && (
           <div className="grid grid-cols-3 gap-3 mb-8">
-            <StatCard count={counts.flying}     label="Flying"      color="green" tooltip={STATUS_TOOLTIPS.flying} />
-            <StatCard count={counts.not_flying} label="Not Flying"  color="red"   tooltip={STATUS_TOOLTIPS.not_flying} />
-            <StatCard count={counts.partial}    label="Limited"     color="amber" tooltip={STATUS_TOOLTIPS.partial} />
+            <StatCard count={counts.flying}     label="Flying"      color="green" tooltip={STATUS_TOOLTIPS.flying}     tooltipAlign="right" />
+            <StatCard count={counts.not_flying} label="Not Flying"  color="red"   tooltip={STATUS_TOOLTIPS.not_flying} tooltipAlign="center" />
+            <StatCard count={counts.partial}    label="Limited"     color="amber" tooltip={STATUS_TOOLTIPS.partial}    tooltipAlign="left" />
           </div>
         )}
 
