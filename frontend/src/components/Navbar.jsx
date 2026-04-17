@@ -35,14 +35,20 @@ export default function Navbar({ isAdmin = false }) {
           </Link>
 
           {/* Telegram link — centered on desktop, near icon on mobile */}
-          <a
-            href="https://t.me/AviationupdatesDG"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-slate-400 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+          <span
+            style={{ fontSize: '14px' }}
+            className="text-slate-400 sm:absolute sm:left-1/2 sm:-translate-x-1/2 whitespace-nowrap"
           >
-            For more information follow us on Telegram <span className="text-blue-400 hover:text-blue-300 underline transition-colors">click here</span>
-          </a>
+            Follow us on Telegram{' '}
+            <a
+              href="https://t.me/AviationupdatesDG"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline transition-colors"
+            >
+              click here
+            </a>
+          </span>
 
           <div className="flex items-center gap-1.5">
             {isAdmin ? (
