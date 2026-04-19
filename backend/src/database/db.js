@@ -391,6 +391,139 @@ async function initDb() {
     sqlDb.exec("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('migration_unconfirmed_end_dates_apr13_2026', '1')");
   }
 
+  // ── Weekly update: 19 Apr 2026 ───────────────────────────────────────────────
+  // Source: Israeli aviation Telegram channel, opening-of-week update.
+  const weeklyApr19Done = _db.prepare("SELECT value FROM sync_meta WHERE key = 'migration_weekly_apr19_2026'").get();
+  if (!weeklyApr19Done) {
+
+    // --- Airlines now FLYING ---
+
+    // TUS Airways — resumed 14/4, expanding today to Paphos & Prague
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Cyprus-based carrier. Resumed 14/04/2026. Expanding from 19/04 to include Paphos and Prague. Routes: Paphos, Larnaca, Naples, Thessaloniki, Sofia, Vienna, Corfu, Santorini, Prague.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'U8'`).run();
+
+    // Uzbekistan Airways — resumed 14/4
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Uzbek flag carrier. Resumed flights to Tel Aviv on 14/04/2026. Route: TLV-Tashkent.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'HY'`).run();
+
+    // Etihad — resumed 15/4
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'UAE carrier. Resumed flights to Tel Aviv on 15/04/2026. Route: TLV-Abu Dhabi.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'EY'`).run();
+
+    // Ethiopian Airlines — resumed 15/4
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'African flag carrier. Resumed flights to Tel Aviv on 15/04/2026. Route: TLV-Addis Ababa.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'ET'`).run();
+
+    // Red Wings — resumed 17/4 to Moscow
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Russian carrier. Resumed flights to Tel Aviv on 17/04/2026. Route: TLV-Moscow.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'WZ'`).run();
+
+    // Sky Express — resumed 17/4
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Greek regional carrier. Resumed flights to Tel Aviv on 17/04/2026. Route: TLV-Athens.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'GQ'`).run();
+
+    // HiSky — resumed 17/4 to Chisinau and Bucharest
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Moldovan LCC. Resumed flights to Tel Aviv on 17/04/2026. Routes: TLV-Chisinau and Bucharest.',
+      destinations = '["TLV-KIV","TLV-OTP"]',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'H4'`).run();
+
+    // flydubai — resumed 17/4
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'UAE LCC. Resumed flights to Tel Aviv on 17/04/2026. Route: TLV-Dubai.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'FZ'`).run();
+
+    // Bluebird — expanding from today (19/4) to Barcelona, Berlin, Budapest, Rhodes, Crete
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Israeli charter airline. Resumed TLV operations from 19/04/2026. Routes: Athens, Budapest, Burgas, Barcelona, Berlin, Varna, Crete, Mykonos, Paphos, Prague, Rhodes, Kos.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'BZ'`).run();
+
+    // Belavia — resuming today (19/4)
+    _db.prepare(`UPDATE airlines SET status = 'flying', cancellation_reason = NULL, cancellation_end_date = NULL, end_date_unconfirmed = 0,
+      notes = 'Belarusian national carrier. Resumed flights to Tel Aviv on 19/04/2026. Route: TLV-Minsk.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'B2'`).run();
+
+    // --- Date / notes updates (still not flying) ---
+
+    // SmartWings — postponed from 15/4 to 22/4
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-04-22',
+      notes = 'Czech LCC. Was expected to resume 15/04 but postponed return to 22/04/2026. Route: TLV-Prague.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'QS'`).run();
+
+    // Cyprus Airways — resuming Thursday 24/4 with Larnaca flights
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-04-24', end_date_unconfirmed = 0,
+      notes = 'Cypriot carrier. Expected to resume Thursday 24/04/2026 with Larnaca flights, then expand to additional destinations.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'CY'`).run();
+
+    // Hainan Airlines — postponed from 16/4 to 23/4 (awaiting Chinese CAAC approval)
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-04-23',
+      notes = 'Chinese carrier. Was expected to resume 16/04 to Shenzhen but did not receive Chinese CAAC approval. Postponed return to 23/04/2026. Routes: TLV-Beijing (PEK) and Shenzhen (SZX).',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'HU'`).run();
+
+    // Georgian Airways — postponed from 17/4 to 24/4
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-04-24', end_date_unconfirmed = 0,
+      notes = 'Georgian carrier. Was expected to resume 17/04 but postponed return by one week to 24/04/2026. Route: TLV-Tbilisi.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'A9'`).run();
+
+    // Aegean Airlines — resuming 28/4 to Athens, then more destinations
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-04-28',
+      notes = 'Greek national carrier. Resuming Athens route on 28/04/2026, followed by additional destinations.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'A3'`).run();
+
+    // Azimuth — postponed from 19/4 to 28/4
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-04-28',
+      notes = 'Russian regional carrier. Was expected to resume 19/04 but postponed to 28/04/2026. Route: TLV-Sochi (via Mineralnye Vody).',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'A4'`).run();
+
+    // Wizz Air — extended suspension to at least 4/5 (was 25/4)
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-05-04',
+      notes = 'Hungarian LCC. Was expected to resume 25/04 but extended suspension to at least 04/05/2026.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'W6'`).run();
+
+    // Centrum Air — planning to resume 5/5
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-05-05',
+      notes = 'Uzbek carrier. Planning to resume flights on 05/05/2026, monitoring the regional situation closely. Routes: TLV-Tashkent and Samarkand.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE name = 'Centrum Air'`).run();
+
+    // British Airways — resuming 1/7
+    _db.prepare(`UPDATE airlines SET cancellation_end_date = '2026-07-01',
+      notes = 'Suspended until 01/07/2026. Route: TLV-London Heathrow.',
+      sync_locked = 1, date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE iata_code = 'BA'`).run();
+
+    // Air Haifa — currently at TLV, moving back to Haifa airport from Thursday 24/4
+    _db.prepare(`UPDATE airlines SET notes = 'Small Israeli carrier. Currently operating from Ben Gurion (TLV). From Thursday 24/04/2026, expected to return to Haifa airport.',
+      date_adjusted = 1, updated_at = CURRENT_TIMESTAMP WHERE name = 'Air Haifa'`).run();
+
+    // --- New airlines ---
+
+    // ALK Airlines (🇧🇬) — operating Athens flights for Bluebird from 12/4
+    const alkExists = _db.prepare("SELECT id FROM airlines WHERE name = 'ALK Airlines'").get();
+    if (!alkExists) {
+      _db.prepare(`INSERT INTO airlines (name, iata_code, status, destinations, cancellation_reason, cancellation_end_date, notes, website, is_israeli, date_adjusted, sync_locked)
+        VALUES ('ALK Airlines', NULL, 'flying', '["TLV-ATH"]', NULL, NULL,
+        'Bulgarian carrier. Operating Athens flights on behalf of Bluebird Airways from 12/04/2026.',
+        NULL, 0, 1, 1)`).run();
+    }
+
+    // FlyLili (🇷🇴) — operating Vienna flights for Arkia from 12/4
+    const flyliliExists = _db.prepare("SELECT id FROM airlines WHERE name = 'FlyLili'").get();
+    if (!flyliliExists) {
+      _db.prepare(`INSERT INTO airlines (name, iata_code, status, destinations, cancellation_reason, cancellation_end_date, notes, website, is_israeli, date_adjusted, sync_locked)
+        VALUES ('FlyLili', NULL, 'flying', '["TLV-VIE"]', NULL, NULL,
+        'Romanian carrier. Operating Vienna flights on behalf of Arkia from 12/04/2026.',
+        NULL, 0, 1, 1)`).run();
+    }
+
+    sqlDb.exec("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('migration_weekly_apr19_2026', '1')");
+  }
+  // ── End weekly update 19 Apr 2026 ────────────────────────────────────────────
+
   _db._save();
   return _db;
 }
