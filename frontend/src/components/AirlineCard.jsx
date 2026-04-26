@@ -7,19 +7,6 @@ const BORDER = {
   partial: 'border-l-amber-500',
 };
 
-function AirlineLogo({ iataCode }) {
-  const [failed, setFailed] = useState(false);
-  if (!iataCode || failed) return null;
-  return (
-    <img
-      src={`https://airhex.com/images/airline-logos/${iataCode.toLowerCase()}.png`}
-      alt=""
-      onError={() => setFailed(true)}
-      className="w-8 h-8 object-contain rounded"
-    />
-  );
-}
-
 function formatDate(dateStr) {
   if (!dateStr) return null;
   return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -40,7 +27,6 @@ function AirlineModal({ airline, onClose }) {
       <div className={`relative bg-slate-900 border border-slate-800 border-l-4 ${BORDER[airline.status] || 'border-l-slate-600'} rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 sticky top-0 bg-slate-900 rounded-t-2xl">
           <div className="flex items-center gap-2">
-            <AirlineLogo iataCode={airline.iata_code} />
             {airline.iata_code && (
               <span className="text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded tracking-widest">
                 {airline.iata_code}
@@ -148,7 +134,6 @@ export default function AirlineCard({ airline }) {
         {/* Name row + status badge */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
-            <AirlineLogo iataCode={airline.iata_code} />
             {airline.iata_code && (
               <span className="text-xs font-mono font-bold text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded tracking-widest flex-shrink-0">
                 {airline.iata_code}
