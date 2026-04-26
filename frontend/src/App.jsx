@@ -5,7 +5,10 @@ import Dashboard from './pages/Dashboard';
 
 function isTokenValid(token) {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    // JWT uses base64url — convert to standard base64 before decoding
+    const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
+    const payload = JSON.parse(atob(padded));
     return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now();
   } catch {
     return false;
@@ -13,10 +16,10 @@ function isTokenValid(token) {
 }
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (!token || !isTokenValid(token)) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('username');
     return <Navigate to="/manage-x7k2" replace />;
   }
   return children;

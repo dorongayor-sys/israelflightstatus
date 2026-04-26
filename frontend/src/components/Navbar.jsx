@@ -11,11 +11,11 @@ function PlaneIcon() {
 export default function Navbar({ isAdmin = false }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const username = localStorage.getItem('username');
+  const username = sessionStorage.getItem('username');
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('username');
     navigate('/');
   };
 

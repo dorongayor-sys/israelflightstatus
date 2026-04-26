@@ -10,27 +10,56 @@ function PlaneIcon() {
   );
 }
 
+const LOCKOUT_KEY = 'login_blocked_until';
+const LOCKOUT_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+function getLockoutRemaining() {
+  const until = parseInt(localStorage.getItem(LOCKOUT_KEY) || '0', 10);
+  const remaining = until - Date.now();
+  return remaining > 0 ? remaining : 0;
+}
+
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [blockedMs, setBlockedMs] = useState(getLockoutRemaining);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (localStorage.getItem('token')) navigate('/admin', { replace: true });
+    if (sessionStorage.getItem('token')) navigate('/admin', { replace: true });
   }, [navigate]);
+
+  // Countdown tick
+  useEffect(() => {
+    if (blockedMs <= 0) return;
+    const id = setInterval(() => {
+      const rem = getLockoutRemaining();
+      setBlockedMs(rem);
+      if (rem <= 0) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [blockedMs]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const rem = getLockoutRemaining();
+    if (rem > 0) { setBlockedMs(rem); return; }
+
     setLoading(true);
     setError('');
     try {
       const { data } = await api.post('/auth/login', form);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('username', data.username);
+      localStorage.removeItem(LOCKOUT_KEY);
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('username', data.username);
       navigate('/admin');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      // Block after 1 failed attempt
+      const until = Date.now() + LOCKOUT_DURATION_MS;
+      localStorage.setItem(LOCKOUT_KEY, String(until));
+      setBlockedMs(LOCKOUT_DURATION_MS);
+      setError(err.response?.data?.error || 'Login failed. This browser is now blocked for 1 hour.');
     } finally {
       setLoading(false);
     }
@@ -54,6 +83,19 @@ export default function Login() {
 
         {/* Card */}
         <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8">
+          {blockedMs > 0 ? (
+            <div className="text-center py-4 space-y-3">
+              <div className="text-4xl">🔒</div>
+              <p className="text-red-400 font-semibold text-sm">Access blocked</p>
+              <p className="text-slate-400 text-sm">Too many failed attempts.</p>
+              <p className="text-slate-500 text-xs">
+                Try again in{' '}
+                <span className="text-white font-mono font-bold">
+                  {Math.floor(blockedMs / 60000)}:{String(Math.floor((blockedMs % 60000) / 1000)).padStart(2, '0')}
+                </span>
+              </p>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20 flex items-center gap-2">
@@ -101,6 +143,7 @@ export default function Login() {
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+          )}
         </div>
 
         <p className="text-center text-xs text-slate-600 mt-6">
