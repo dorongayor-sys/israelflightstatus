@@ -3,9 +3,22 @@ import PublicView from './pages/PublicView';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
+function isTokenValid(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/manage-x7k2" replace />;
+  if (!token || !isTokenValid(token)) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    return <Navigate to="/manage-x7k2" replace />;
+  }
   return children;
 }
 
