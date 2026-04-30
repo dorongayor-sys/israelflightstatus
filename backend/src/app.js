@@ -6,6 +6,7 @@ const { initDb } = require('./database/db');
 const authRoutes = require('./routes/auth');
 const airlineRoutes = require('./routes/airlines');
 const changelogRoutes = require('./routes/changelog');
+const newsRoutes = require('./routes/news');
 const { startAutoSync, runMakoSync, runTelegramSync, runEshetSync } = require('./autoSync');
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/airlines', airlineRoutes);
 app.use('/api/changelog', changelogRoutes);
+app.use('/api/news', newsRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

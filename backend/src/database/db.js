@@ -175,6 +175,21 @@ async function initDb() {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS news_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id INTEGER UNIQUE,
+      category TEXT NOT NULL DEFAULT 'civil',
+      title TEXT NOT NULL,
+      excerpt TEXT,
+      full_text TEXT,
+      photo_file_id TEXT,
+      photo_credit TEXT,
+      post_date TEXT,
+      is_breaking INTEGER NOT NULL DEFAULT 0,
+      telegram_url TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Migrate: add sync_locked if missing

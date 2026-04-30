@@ -2,11 +2,13 @@
    Aviation Updates DG — News Site
    ============================================================
    CONFIG: Update AIRLINE_STATUS_URL with your Netlify site URL
+           Update BACKEND_URL with your Railway backend URL
    ============================================================ */
 
 const CONFIG = {
   airlineStatusUrl: 'https://israelflightstatustlv.netlify.app/', // existing airline status site
-  telegramUrl: 'https://t.me/AviationupdatesDG'
+  telegramUrl: 'https://t.me/AviationupdatesDG',
+  backendUrl: 'REPLACE_WITH_RAILWAY_URL'
 };
 
 /* ── Category definitions ── */
@@ -29,121 +31,8 @@ const HERO_GRADIENTS = {
   memorial: 'linear-gradient(135deg, #10103a 0%, #1e1e6a 60%, #10103a 100%)'
 };
 
-/* ── Posts data (newest first, sourced from @AviationupdatesDG) ── */
-const POSTS = [
-  {
-    id: 1,
-    featured: true,
-    breaking: true,
-    category: 'civil',
-    title: 'לראשונה זה 7 שנים: חודשו הטיסות הישירות מארה"ב לוונצואלה',
-    excerpt: 'לראשונה מזה שבע שנים חודשו הטיסות הישירות בין ארצות הברית לוונצואלה.',
-    date: '2026-04-26',
-    displayDate: '26 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1143'
-  },
-  {
-    id: 2,
-    category: 'civil',
-    title: 'אייר פראנס מאריכה את ביטולי הטיסות לישראל עד ה-11.5',
-    excerpt: 'אייר פראנס הודיעה על הארכת ביטול הטיסות לישראל ומישראל עד ה-11 במאי.',
-    date: '2026-04-26',
-    displayDate: '26 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1141'
-  },
-  {
-    id: 3,
-    category: 'military',
-    title: 'פעם השנייה בתוך שבוע: חיזבאללה הפיל כטב"מ ישראלי',
-    excerpt: 'חיזבאללה הצליח להפיל כטב"מ ישראלי — זו הפעם השנייה בתוך שבוע אחד בלבד.',
-    date: '2026-04-26',
-    displayDate: '26 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1142'
-  },
-  {
-    id: 4,
-    category: 'aviation',
-    title: 'היום מציינים את יום הטייס הבינלאומי',
-    excerpt: 'כמדי שנה, ב-26 באפריל מציינת קהילת התעופה העולמית את יום הטייס הבינלאומי.',
-    date: '2026-04-26',
-    displayDate: '26 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1140'
-  },
-  {
-    id: 5,
-    category: 'security',
-    alert: true,
-    title: 'התראה: הונאות בשם אל על — אל תיפלו בפח',
-    excerpt: 'התראה על הונאות המתחזות לחברת אל על ומציעות הטבות שווא לנוסעים. אמתו מידע רק דרך ערוצי אל על הרשמיים.',
-    date: '2026-04-25',
-    displayDate: '25 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1138'
-  },
-  {
-    id: 6,
-    category: 'military',
-    title: 'כטב"מ "זיק" (הרמס 450) של חיל האוויר הופל בשמי צור',
-    excerpt: 'כטב"מ מסוג "זיק" (הרמס 450) של חיל האוויר הישראלי הופל מעל שמי צור בדרום לבנון.',
-    date: '2026-04-25',
-    displayDate: '25 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1137'
-  },
-  {
-    id: 7,
-    category: 'military',
-    title: 'נושאת המטוסים האמריקאית "ג\'ורג\' בוש" נכנסה לאזור הפיקוד של הסנטקום',
-    excerpt: 'נושאת המטוסים האמריקאית USS George Bush נכנסה לאזור הפיקוד של הסנטקום במזרח התיכון.',
-    date: '2026-04-24',
-    displayDate: '24 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1136'
-  },
-  {
-    id: 8,
-    category: 'memorial',
-    title: 'טקס יום הזיכרון המרכזי של חיל האוויר',
-    excerpt: 'חיל האוויר ערך את טקס יום הזיכרון המרכזי לזכר חללי החיל, לווה במטס הצדעה.',
-    date: '2026-04-24',
-    displayDate: '24 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1133'
-  },
-  {
-    id: 9,
-    category: 'memorial',
-    title: 'אימונים אחרונים למטס יום הזיכרון',
-    excerpt: 'חיל האוויר השלים את האימונים האחרונים לקראת מטס יום הזיכרון.',
-    date: '2026-04-24',
-    displayDate: '24 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1124'
-  },
-  {
-    id: 10,
-    category: 'civil',
-    title: 'מילאי צפוי להכריז על קו ישיר ישראל–ארגנטינה',
-    excerpt: 'לפי דיווחים, נשיא ארגנטינה חביאר מילאי צפוי להכריז על פתיחת קו טיסה ישיר בין ישראל לארגנטינה.',
-    date: '2026-04-24',
-    displayDate: '24 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1123'
-  },
-  {
-    id: 11,
-    category: 'aviation',
-    title: 'תאונת דרכים קשה בטרמינל 1',
-    excerpt: 'תאונת דרכים קשה אירעה בטרמינל 1 בנתב"ג.',
-    date: '2026-04-24',
-    displayDate: '24 באפריל 2026',
-    telegramUrl: 'https://t.me/AviationupdatesDG/1122'
-  },
-  {
-    id: 12,
-    category: 'status',
-    title: 'עוקב הסטטוס של חברות התעופה לנתב"ג — עודכן',
-    excerpt: 'עוקב הסטטוס הבלעדי עודכן עם המידע העדכני ביותר על חברות הטסות, פועלות חלקית, או מושעות לנתב"ג.',
-    date: '2026-04-24',
-    displayDate: '24 באפריל 2026',
-    isStatusLink: true,
-    telegramUrl: 'https://t.me/AviationupdatesDG/1134'
-  }
-];
+/* ── In-memory posts array, populated from backend ── */
+let POSTS = [];
 
 /* ============================================================
    UTILITIES
@@ -185,9 +74,22 @@ function renderHero(post) {
   const gradient = HERO_GRADIENTS[post.category] || HERO_GRADIENTS.civil;
   const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
 
+  // Build background — photo if available, otherwise gradient
+  let bgStyle;
+  let creditHtml = '';
+  if (post.photoFileId) {
+    const imgUrl = `${CONFIG.backendUrl}/api/news/image/${encodeURIComponent(post.photoFileId)}`;
+    bgStyle = `background: ${gradient}; background-image: url('${imgUrl}'); background-size: cover; background-position: center;`;
+    if (post.photoCredit) {
+      creditHtml = `<span class="hero-photo-credit">📷 ${escape(post.photoCredit)}</span>`;
+    }
+  } else {
+    bgStyle = `background:${gradient}`;
+  }
+
   const html = `
     <a class="hero-card" href="${escape(linkUrl)}" target="_blank" rel="noopener" aria-label="${escape(post.title)}">
-      <div class="hero-bg" style="background:${gradient}"></div>
+      <div class="hero-bg" style="${bgStyle}"></div>
       <div class="hero-dots"></div>
       <div class="hero-plane-bg" aria-hidden="true">✈</div>
       <div class="hero-overlay"></div>
@@ -211,6 +113,7 @@ function renderHero(post) {
           </span>
         </div>
       </div>
+      ${creditHtml}
     </a>`;
 
   document.getElementById('heroSection').innerHTML = html;
@@ -230,7 +133,7 @@ function renderCard(post) {
     <article class="news-card" data-category="${escape(post.category)}" role="listitem">
       <div class="card-header">
         <span class="card-cat-badge ${cat.badgeClass}">${cat.label}</span>
-        ${post.alert ? '<span class="card-alert">⚠ התראה</span>' : ''}
+        ${post.breaking ? '<span class="card-alert">🚨 מבזק</span>' : ''}
       </div>
       <div class="card-body">
         <h3 class="card-title">${escape(post.title)}</h3>
@@ -304,8 +207,8 @@ window.filterByCategory = function(cat) {
    TICKER
    ============================================================ */
 
-function initTicker() {
-  const tickerHeadlines = POSTS.map(p => p.title);
+function initTicker(posts) {
+  const tickerHeadlines = posts.map(p => p.title);
   const allItems = [...tickerHeadlines, ...tickerHeadlines]; // duplicate for seamless loop
   const html = allItems.map(h => `<span class="ticker-item">${escape(h)}</span>`).join('');
   document.getElementById('tickerTrack').innerHTML = html;
@@ -344,20 +247,80 @@ function initNavTabs() {
 }
 
 /* ============================================================
+   LOADING / ERROR STATES
+   ============================================================ */
+
+function showLoading() {
+  const heroSection = document.getElementById('heroSection');
+  const newsGrid = document.getElementById('newsGrid');
+  if (heroSection) {
+    heroSection.innerHTML = `
+      <div class="hero-card" style="display:flex;align-items:center;justify-content:center;min-height:340px;">
+        <div style="text-align:center;color:rgba(255,255,255,0.6);">
+          <div class="loading-spinner" style="margin:0 auto 16px;"></div>
+          <p>טוען עדכונים...</p>
+        </div>
+      </div>`;
+  }
+  if (newsGrid) {
+    newsGrid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:48px 0;color:rgba(255,255,255,0.5);">
+        <div class="loading-spinner" style="margin:0 auto 16px;"></div>
+        <p>טוען כתבות...</p>
+      </div>`;
+  }
+}
+
+function showError(message) {
+  const heroSection = document.getElementById('heroSection');
+  const newsGrid = document.getElementById('newsGrid');
+  const errHtml = `
+    <div style="text-align:center;padding:48px 24px;color:rgba(255,255,255,0.6);">
+      <p style="font-size:2rem;margin-bottom:12px;">⚠</p>
+      <p style="font-size:1.1rem;margin-bottom:8px;">שגיאה בטעינת עדכונים</p>
+      <p style="font-size:0.85rem;opacity:0.7;">${escape(message)}</p>
+    </div>`;
+  if (heroSection) heroSection.innerHTML = errHtml;
+  if (newsGrid) newsGrid.innerHTML = '';
+}
+
+/* ============================================================
+   FETCH AND RENDER
+   ============================================================ */
+
+async function fetchAndRender() {
+  showLoading();
+  try {
+    const res = await fetch(`${CONFIG.backendUrl}/api/news/posts`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const posts = await res.json();
+
+    POSTS = posts;
+
+    // Ticker
+    initTicker(POSTS);
+
+    // Render featured hero (first post, which the backend marks featured: true)
+    const featured = POSTS.find(p => p.featured);
+    if (featured) renderHero(featured);
+    else document.getElementById('heroSection').innerHTML = '';
+
+    // Render grid using current active filter
+    filterPosts(activeFilter);
+
+  } catch (err) {
+    console.error('[fetchAndRender] Failed to load posts:', err);
+    showError(err.message);
+  }
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
   setTodayDate();
   setStatusLinks();
-  initTicker();
-
-  // Render featured hero (first post with featured: true)
-  const featured = POSTS.find(p => p.featured);
-  if (featured) renderHero(featured);
-
-  // Render grid (non-featured posts)
-  filterPosts('all');
-
   initNavTabs();
+  fetchAndRender();
 });
