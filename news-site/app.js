@@ -11,12 +11,12 @@ const CONFIG = {
 
 /* ── Category definitions ── */
 const CATEGORIES = {
-  civil:    { label: 'Civil Aviation', color: 'blue',    accent: '#3b82f6', badgeClass: 'badge-civil' },
-  military: { label: 'Military',       color: 'purple',  accent: '#a855f7', badgeClass: 'badge-military' },
-  security: { label: 'Security Alert', color: 'red',     accent: '#ef4444', badgeClass: 'badge-security' },
-  status:   { label: 'Status Update',  color: 'green',   accent: '#22c55e', badgeClass: 'badge-status' },
-  aviation: { label: 'Aviation',       color: 'cyan',    accent: '#06b6d4', badgeClass: 'badge-aviation' },
-  memorial: { label: 'Memorial',       color: 'indigo',  accent: '#6366f1', badgeClass: 'badge-memorial' }
+  civil:    { label: 'תעופה אזרחית',   color: 'blue',   accent: '#3b82f6', badgeClass: 'badge-civil' },
+  military: { label: 'צבאי',           color: 'purple', accent: '#a855f7', badgeClass: 'badge-military' },
+  security: { label: 'התראת ביטחון',   color: 'red',    accent: '#ef4444', badgeClass: 'badge-security' },
+  status:   { label: 'עדכון סטטוס',    color: 'green',  accent: '#22c55e', badgeClass: 'badge-status' },
+  aviation: { label: 'תעופה',          color: 'cyan',   accent: '#06b6d4', badgeClass: 'badge-aviation' },
+  memorial: { label: 'יום זיכרון',     color: 'indigo', accent: '#6366f1', badgeClass: 'badge-memorial' }
 };
 
 /* ── Hero gradient per category ── */
@@ -36,83 +36,83 @@ const POSTS = [
     featured: true,
     breaking: true,
     category: 'civil',
-    title: 'Argentina Set to Announce Historic Direct Tel Aviv–Buenos Aires Route',
-    excerpt: 'President Javier Milei is expected to officially announce a new non-stop route between Tel Aviv Ben Gurion Airport and Buenos Aires on June 9, to be operated by Aerolíneas Argentinas — marking a significant expansion of South American aviation links to Israel.',
+    title: 'ארגנטינה עומדת להכריז על קו ישיר היסטורי תל אביב–בואנוס איירס',
+    excerpt: 'הנשיא חביאר מילאי צפוי להכריז רשמית על קו ישיר חדש בין שדה התעופה בן גוריון בתל אביב לבואנוס איירס ב-9 ביוני, שיופעל על ידי Aerolíneas Argentinas — צעד משמעותי בהרחבת קשרי התעופה הדרום אמריקאיים עם ישראל.',
     date: '2026-04-29',
-    displayDate: 'April 29, 2026',
+    displayDate: '29 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 2,
     category: 'civil',
-    title: 'Air France Extends Israel Flight Suspension Through May 11',
-    excerpt: 'Air France has extended its suspension of all flights to and from Ben Gurion International Airport through May 11, 2026, citing ongoing regional security assessments. The carrier joins several European airlines that have pushed back resumption timelines.',
+    title: 'אייר פראנס מאריכה את השעיית הטיסות לישראל עד 11 במאי',
+    excerpt: 'אייר פראנס הארכה את השעיית כל הטיסות מ/אל שדה התעופה הבינלאומי בן גוריון עד 11 במאי 2026, בשל הערכות ביטחון אזוריות שוטפות. החברה מצטרפת למספר חברות תעופה אירופאיות שדחו את לוחות הזמנים לחזרה לפעילות.',
     date: '2026-04-25',
-    displayDate: 'April 25, 2026',
+    displayDate: '25 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 3,
     category: 'military',
-    title: 'IDF Air Force Memorial Ceremony Honors 1,583 Fallen Pilots at Har Tayasim',
-    excerpt: "Israel's Air Force held its central memorial ceremony at Har Tayasim, honoring the 1,583 members who have fallen in service since the IDF's founding. An F-16I Sufa performed a moving tribute flyover during the ceremony.",
+    title: 'טקס יום הזיכרון של חיל האוויר מכבד 1,583 טייסים שנפלו בהר הטייסים',
+    excerpt: 'חיל האוויר הישראלי ערך את טקס יום הזיכרון המרכזי בהר הטייסים, לזכר 1,583 חברי החיל שנפלו בשירות מאז הקמת צה"ל. F-16I סופה ביצע מעבר הצדעה מרגש במהלך הטקס.',
     date: '2026-04-28',
-    displayDate: 'April 28, 2026',
+    displayDate: '28 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 4,
     category: 'military',
-    title: 'Hezbollah Claims Downing of Israeli Hermes 450 UAV Over Southern Lebanon',
-    excerpt: 'Hezbollah has announced the downing of an Israeli Hermes 450 unmanned aerial vehicle operating over southern Lebanon — the second drone loss reported in the region within days, amid escalating aerial activity along the northern border.',
+    title: 'חיזבאללה טוען להפלת כטב"מ הרמס 450 ישראלי מעל דרום לבנון',
+    excerpt: 'חיזבאללה הודיע על הפלת כלי טיס בלתי מאויש מסוג הרמס 450 ישראלי שפעל מעל דרום לבנון — אובדן הכטב"מ השני שדווח באזור תוך ימים, בצל התגברות פעילות אווירית לאורך הגבול הצפוני.',
     date: '2026-04-27',
-    displayDate: 'April 27, 2026',
+    displayDate: '27 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 5,
     category: 'military',
-    title: 'USS George H.W. Bush Carrier Strike Group Enters CENTCOM Zone',
-    excerpt: 'The USS George H.W. Bush aircraft carrier strike group has entered the U.S. Central Command area of operations in the Middle East, reinforcing American naval presence in the region amid heightened tensions.',
+    title: 'קבוצת נושאת המטוסים USS George H.W. Bush נכנסת לאזור CENTCOM',
+    excerpt: 'קבוצת נושאת המטוסים USS George H.W. Bush נכנסה לאזור הפיקוד המרכזי האמריקאי (CENTCOM) במזרח התיכון, ומחזקת את הנוכחות הימית האמריקאית באזור בצל מתחים גוברים.',
     date: '2026-04-27',
-    displayDate: 'April 27, 2026',
+    displayDate: '27 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 6,
     category: 'security',
     alert: true,
-    title: 'ALERT: Fraudulent El Al Impersonation Campaign Actively Targeting Passengers',
-    excerpt: 'Israeli aviation and consumer protection authorities have issued an urgent warning about a sophisticated scam campaign impersonating El Al Israel Airlines. Passengers are urged to verify all flight-related communications exclusively through official El Al channels.',
+    title: 'התראה: מסע הונאה מתחזה לאל על פועל ופוגע בנוסעים',
+    excerpt: 'רשויות התעופה ואכיפת הצרכן הישראליות פרסמו אזהרה דחופה על מסע הונאה מתוחכם המתחזה לאל על ישראל. הנוסעים מתבקשים לאמת את כל התקשורת הקשורה לטיסה אך ורק דרך ערוצי אל על הרשמיים.',
     date: '2026-04-26',
-    displayDate: 'April 26, 2026',
+    displayDate: '26 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 7,
     category: 'memorial',
-    title: 'Memorial Day Aerial Display: IDF Completes Final Training Runs Over Jerusalem',
-    excerpt: 'Israeli Air Force pilots completed final rehearsal sorties over Jerusalem ahead of Israel\'s Memorial Day aerial tribute ceremony. Documentation from the training flights was captured and shared by observers across the city.',
+    title: 'תצוגה אווירית ליום הזיכרון: חיל האוויר השלים תרגולים אחרונים מעל ירושלים',
+    excerpt: 'טייסי חיל האוויר הישראלי השלימו גיחות תרגול אחרונות מעל ירושלים לקראט טקס מחווה אווירית ביום הזיכרון. תיעוד מהטיסות שותף על ידי משקיפים ברחבי העיר.',
     date: '2026-04-28',
-    displayDate: 'April 28, 2026',
+    displayDate: '28 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 8,
     category: 'aviation',
-    title: 'International Pilot Day 2026: Celebrating the Professionals Who Keep the Skies Connected',
-    excerpt: 'The global aviation community marks International Pilot Day on April 26, honoring the professional aviators who keep the world connected through the skies. Aviation Updates DG salutes all pilots, military and civilian alike.',
+    title: 'יום הטייס הבינלאומי 2026: חגיגת המקצוענים ששומרים על השמים מחוברים',
+    excerpt: 'קהילת התעופה העולמית מציינת את יום הטייס הבינלאומי ב-26 באפריל, לכבוד הטייסים המקצועיים ששומרים על קישוריות עולמית דרך השמים. עדכוני תעופה DG משתחווה לכל הטייסים, צבאיים ואזרחיים כאחד.',
     date: '2026-04-26',
-    displayDate: 'April 26, 2026',
+    displayDate: '26 באפריל 2026',
     telegramUrl: CONFIG.telegramUrl
   },
   {
     id: 9,
     category: 'status',
-    title: 'Live Airline Status Dashboard Updated — Track Which Carriers Fly to Ben Gurion',
-    excerpt: 'Our exclusive airline status tracker has been updated with the latest information on which carriers are flying, partially operating, or fully suspended on routes to Ben Gurion Airport (TLV). Data covers 100+ airlines in real time.',
+    title: 'לוח סטטוס חברות תעופה חי עודכן — עקוב אחרי חברות הטסות לבן גוריון',
+    excerpt: 'עוקב הסטטוס הבלעדי שלנו עודכן עם המידע העדכני ביותר על חברות הטסות, פועלות חלקית, או בהשעייה מלאה בקווים לשדה התעופה בן גוריון (TLV). המידע מכסה יותר מ-100 חברות תעופה בזמן אמת.',
     date: '2026-04-28',
-    displayDate: 'April 28, 2026',
+    displayDate: '28 באפריל 2026',
     isStatusLink: true,
     telegramUrl: CONFIG.airlineStatusUrl
   }
@@ -128,15 +128,15 @@ function formatDate(isoDate) {
   const diffMs = now - d;
   const diffH = Math.floor(diffMs / 3600000);
   const diffD = Math.floor(diffMs / 86400000);
-  if (diffH < 1)  return 'Just now';
-  if (diffH < 24) return `${diffH}h ago`;
-  if (diffD === 1) return 'Yesterday';
-  if (diffD < 7)  return `${diffD} days ago`;
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (diffH < 1)  return 'עכשיו';
+  if (diffH < 24) return `לפני ${diffH} שעות`;
+  if (diffD === 1) return 'אתמול';
+  if (diffD < 7)  return `לפני ${diffD} ימים`;
+  return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function todayFormatted() {
-  return new Date().toLocaleDateString('en-GB', {
+  return new Date().toLocaleDateString('he-IL', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
 }
@@ -157,7 +157,7 @@ function renderHero(post) {
   const cat = getCat(post.category);
   const gradient = HERO_GRADIENTS[post.category] || HERO_GRADIENTS.civil;
   const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
-  const linkLabel = post.isStatusLink ? 'View Status Tracker →' : 'Read on Telegram →';
+  const linkLabel = post.isStatusLink ? '← צפה בעוקב' : '← קרא בטלגרם';
 
   const html = `
     <a class="hero-card" href="${escape(linkUrl)}" target="_blank" rel="noopener" aria-label="${escape(post.title)}">
@@ -167,7 +167,7 @@ function renderHero(post) {
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-badges">
-          ${post.breaking ? '<span class="breaking-badge">Breaking News</span>' : ''}
+          ${post.breaking ? '<span class="breaking-badge">חדשות דחופות</span>' : ''}
           <span class="cat-badge" style="color:${cat.accent}; border-color:${cat.accent}40; background:${cat.accent}15;">
             ${cat.label}
           </span>
@@ -179,8 +179,8 @@ function renderHero(post) {
           <span class="hero-btn">
             ${linkLabel}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
             </svg>
           </span>
         </div>
@@ -197,14 +197,14 @@ function renderHero(post) {
 function renderCard(post) {
   const cat = getCat(post.category);
   const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
-  const linkLabel = post.isStatusLink ? 'Open tracker →' : 'Read on Telegram →';
+  const linkLabel = post.isStatusLink ? '← פתח עוקב' : '← קרא בטלגרם';
   const timeAgo = formatDate(post.date);
 
   return `
     <article class="news-card" data-category="${escape(post.category)}" role="listitem">
       <div class="card-header">
         <span class="card-cat-badge ${cat.badgeClass}">${cat.label}</span>
-        ${post.alert ? '<span class="card-alert">⚠ Alert</span>' : ''}
+        ${post.alert ? '<span class="card-alert">⚠ התראה</span>' : ''}
       </div>
       <div class="card-body">
         <h3 class="card-title">${escape(post.title)}</h3>
@@ -214,8 +214,8 @@ function renderCard(post) {
           <a href="${escape(linkUrl)}" target="_blank" rel="noopener" class="card-link" aria-label="${escape(post.title)} — ${linkLabel}">
             ${linkLabel}
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
             </svg>
           </a>
         </div>
@@ -254,9 +254,9 @@ function filterPosts(category) {
   // Update section title
   const titleEl = document.getElementById('sectionTitle');
   if (category === 'all') {
-    titleEl.textContent = 'Latest Updates';
+    titleEl.textContent = 'עדכונים אחרונים';
   } else {
-    titleEl.textContent = (CATEGORIES[category]?.label || category) + ' Updates';
+    titleEl.textContent = (CATEGORIES[category]?.label || category) + ' — עדכונים';
   }
 
   // Filter posts (excluding featured)

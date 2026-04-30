@@ -37,7 +37,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Heebo', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -241,13 +241,14 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .ticker-viewport {
   overflow: hidden;
   flex: 1;
-  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-image: linear-gradient(to left, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 .ticker-track {
   display: flex;
   white-space: nowrap;
   animation: ticker 35s linear infinite;
   gap: 0;
+  direction: rtl;
 }
 .ticker-track:hover { animation-play-state: paused; }
 .ticker-item {
@@ -264,7 +265,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 @keyframes ticker {
   0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(50%); }
 }
 
 /* ============================================================
@@ -303,8 +304,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   inset: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 60px;
+  justify-content: flex-start;
+  padding-left: 60px;
   z-index: 1;
   opacity: 0.06;
   font-size: 280px;
@@ -421,7 +422,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .hero-btn:hover {
   background: rgba(59,130,246,0.35);
   border-color: var(--blue);
-  transform: translateX(3px);
+  transform: translateX(-3px);
 }
 
 /* ============================================================
@@ -474,7 +475,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   width: 3px;
   height: 100%;
   border-radius: 0;
