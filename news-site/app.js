@@ -182,19 +182,22 @@ function escape(str) {
 
 function renderHero(post) {
   const container = document.getElementById('heroSection');
-
-  // Extract "Channel/PostNumber" from the full telegram URL
   const postPath = post.telegramUrl.replace('https://t.me/', '');
 
-  container.innerHTML = `
-    <div class="hero-embed-wrap">
-      <script async src="https://telegram.org/js/telegram-widget.js?22"
-        data-telegram-post="${postPath}"
-        data-width="100%"
-        data-dark="1"
-        data-userpic="false">
-      <\/script>
-    </div>`;
+  const wrap = document.createElement('div');
+  wrap.className = 'hero-embed-wrap';
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://telegram.org/js/telegram-widget.js?22';
+  script.setAttribute('data-telegram-post', postPath);
+  script.setAttribute('data-width', '100%');
+  script.setAttribute('data-dark', '1');
+  script.setAttribute('data-userpic', 'false');
+
+  wrap.appendChild(script);
+  container.innerHTML = '';
+  container.appendChild(wrap);
 }
 
 /* ============================================================
