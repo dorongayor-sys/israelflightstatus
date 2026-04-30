@@ -40,7 +40,6 @@ const POSTS = [
     excerpt: 'לראשונה מזה שבע שנים חודשו הטיסות הישירות בין ארצות הברית לוונצואלה.',
     date: '2026-04-26',
     displayDate: '26 באפריל 2026',
-    image: 'https://cdn4.telesco.pe/file/rHEy7_5XLOTLz1OhXtHU6_19yMUDzB77wVQV5hB49u23ireWn0oqDMbUfynm253uhen3TNpDrY9xTDcVXDFf9onvdbvopEcZ6pCFtn5Qa1ePfcegryKSjwRFaYmliUxb47Cc0HbvD0XLyRV3vsZjIZllSGrpS46aSTSclQ1CZ_IaP3KMOlcHSjh2_T-WSPLEcTqXMGxVFqVy2gs85FO6XSPh9Q3BD7tKlHmvT37al-Cm4mF2nRJm0kD8VC0cT6AfUHodN0uiFNNEzkL8w1TRzOc5q_qz9g9lmoqq5x9nLFyMn3lce2b0kcXbaeUa6sEo7aSwpNWfkR99nGg0v9533A.jpg',
     telegramUrl: 'https://t.me/AviationupdatesDG/1143'
   },
   {
@@ -182,48 +181,20 @@ function escape(str) {
    ============================================================ */
 
 function renderHero(post) {
-  const cat = getCat(post.category);
-  const gradient = HERO_GRADIENTS[post.category] || HERO_GRADIENTS.civil;
-  const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
-  const linkLabel = post.isStatusLink ? '← צפה בעוקב' : '← קרא בטלגרם';
+  const container = document.getElementById('heroSection');
 
-  const bgStyle = post.image
-    ? `background-image: url('${post.image}'); background-size: cover; background-position: center;`
-    : `background: ${gradient}`;
+  // Extract "Channel/PostNumber" from the full telegram URL
+  const postPath = post.telegramUrl.replace('https://t.me/', '');
 
-  const creditHtml = post.imageCredit
-    ? `<span class="hero-photo-credit">📷 ${escape(post.imageCredit)}</span>`
-    : '';
-
-  const html = `
-    <a class="hero-card" href="${escape(linkUrl)}" target="_blank" rel="noopener" aria-label="${escape(post.title)}">
-      <div class="hero-bg" style="${bgStyle}"></div>
-      ${!post.image ? '<div class="hero-dots"></div><div class="hero-plane-bg" aria-hidden="true">✈</div>' : ''}
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <div class="hero-badges">
-          ${post.breaking ? '<span class="breaking-badge">מבזק</span>' : ''}
-          <span class="cat-badge" style="color:${cat.accent}; border-color:${cat.accent}40; background:${cat.accent}15;">
-            ${cat.label}
-          </span>
-        </div>
-        <h2 class="hero-title">${escape(post.title)}</h2>
-        <p class="hero-excerpt">${escape(post.excerpt)}</p>
-        <div class="hero-meta">
-          <span class="hero-date">📅 ${post.displayDate}</span>
-          <span class="hero-btn">
-            ${linkLabel}
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
-            </svg>
-          </span>
-        </div>
-      </div>
-      ${creditHtml}
-    </a>`;
-
-  document.getElementById('heroSection').innerHTML = html;
+  container.innerHTML = `
+    <div class="hero-embed-wrap">
+      <script async src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-post="${postPath}"
+        data-width="100%"
+        data-dark="1"
+        data-userpic="false">
+      <\/script>
+    </div>`;
 }
 
 /* ============================================================
