@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aviation Updates DG — Israel Aviation Intelligence</title>
+  <meta name="description" content="Real-time aviation intelligence covering Israel and the region. Military aviation, civil flights, airport operations, and breaking news.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="container">
+      <span id="todayDate" class="top-date"></span>
+      <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener" class="tg-follow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.196 14.26l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.007.131.625.326z"/>
+        </svg>
+        Follow on Telegram
+      </a>
+    </div>
+  </div>
+
+  <!-- Brand Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">✈</div>
+        <div class="brand-text">
+          <div class="brand-name">Aviation Updates DG</div>
+          <div class="brand-tagline">Israel Aviation Intelligence</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="nav-inner">
+        <div class="nav-filters" role="tablist">
+          <button class="nav-tab active" data-filter="all" role="tab" aria-selected="true">All Updates</button>
+          <button class="nav-tab" data-filter="civil" role="tab" aria-selected="false">Civil Aviation</button>
+          <button class="nav-tab" data-filter="military" role="tab" aria-selected="false">Military</button>
+          <button class="nav-tab" data-filter="security" role="tab" aria-selected="false">Security</button>
+        </div>
+        <a class="status-nav-link" id="statusNavLink" href="#" target="_blank" rel="noopener">
+          <span class="live-dot" aria-hidden="true"></span>
+          Airline Status Tracker
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Breaking News Ticker -->
+  <div class="ticker-bar" aria-label="Breaking news ticker" aria-live="polite">
+    <div class="container">
+      <span class="ticker-label" aria-hidden="true">BREAKING</span>
+      <div class="ticker-viewport" aria-hidden="true">
+        <div class="ticker-track" id="tickerTrack"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="site-main">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="hero-section" id="heroSection" aria-label="Featured story"></section>
+
+      <!-- Section Header -->
+      <div class="section-header">
+        <h2 class="section-title" id="sectionTitle">Latest Updates</h2>
+        <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener" class="see-all">
+          All updates on Telegram →
+        </a>
+      </div>
+
+      <!-- News Grid -->
+      <div class="news-grid" id="newsGrid" role="list"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display:none" aria-live="polite">
+        <p>No posts in this category yet.</p>
+      </div>
+
+      <!-- Airline Status CTA -->
+      <div class="status-cta">
+        <div class="status-cta-content">
+          <div class="status-cta-icon" aria-hidden="true">✈</div>
+          <div class="status-cta-text">
+            <h3>Live Airline Status Tracker</h3>
+            <p>Which airlines are flying to Ben Gurion Airport right now? Our live dashboard tracks 100+ carriers in real time.</p>
+          </div>
+        </div>
+        <a href="#" id="statusCtaBtn" target="_blank" rel="noopener" class="status-cta-btn">
+          Open Tracker
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-about">
+          <div class="footer-logo">✈ Aviation Updates DG</div>
+          <p>Real-time aviation intelligence covering Israel and the wider region. Military aviation, civil flights, airport operations, and breaking news — all in one place.</p>
+          <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener" class="footer-tg-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.196 14.26l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.007.131.625.326z"/>
+            </svg>
+            Join Telegram Channel
+          </a>
+        </div>
+
+        <div class="footer-links">
+          <h4>Quick Access</h4>
+          <ul>
+            <li><a href="#" onclick="window.scrollTo(0,0);return false;">News Feed</a></li>
+            <li><a href="#" id="footerStatusLink" target="_blank" rel="noopener">Airline Status Tracker</a></li>
+            <li><a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener">Telegram Channel</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="#" onclick="filterByCategory('civil');return false;">Civil Aviation</a></li>
+            <li><a href="#" onclick="filterByCategory('military');return false;">Military</a></li>
+            <li><a href="#" onclick="filterByCategory('security');return false;">Security Alerts</a></li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Aviation Updates DG &nbsp;·&nbsp; Not affiliated with any official aviation authority &nbsp;·&nbsp;
+          <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener">@AviationupdatesDG</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
