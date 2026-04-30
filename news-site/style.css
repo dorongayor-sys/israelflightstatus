@@ -273,22 +273,6 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
    ============================================================ */
 .hero-section { margin: 36px 0 0; }
 
-/* Telegram embed wrapper */
-.hero-embed-wrap {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  min-height: 200px;
-}
-.hero-embed-wrap iframe {
-  border-radius: 10px;
-  max-width: 680px;
-  width: 100% !important;
-}
 
 .hero-card {
   position: relative;

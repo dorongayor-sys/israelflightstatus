@@ -181,23 +181,39 @@ function escape(str) {
    ============================================================ */
 
 function renderHero(post) {
-  const container = document.getElementById('heroSection');
-  const postPath = post.telegramUrl.replace('https://t.me/', '');
+  const cat = getCat(post.category);
+  const gradient = HERO_GRADIENTS[post.category] || HERO_GRADIENTS.civil;
+  const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
 
-  const wrap = document.createElement('div');
-  wrap.className = 'hero-embed-wrap';
+  const html = `
+    <a class="hero-card" href="${escape(linkUrl)}" target="_blank" rel="noopener" aria-label="${escape(post.title)}">
+      <div class="hero-bg" style="background:${gradient}"></div>
+      <div class="hero-dots"></div>
+      <div class="hero-plane-bg" aria-hidden="true">✈</div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-badges">
+          ${post.breaking ? '<span class="breaking-badge">מבזק</span>' : ''}
+          <span class="cat-badge" style="color:${cat.accent}; border-color:${cat.accent}40; background:${cat.accent}15;">
+            ${cat.label}
+          </span>
+        </div>
+        <h2 class="hero-title">${escape(post.title)}</h2>
+        <p class="hero-excerpt">${escape(post.excerpt)}</p>
+        <div class="hero-meta">
+          <span class="hero-date">📅 ${post.displayDate}</span>
+          <span class="hero-btn">
+            ← קרא בטלגרם
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </a>`;
 
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = 'https://telegram.org/js/telegram-widget.js?22';
-  script.setAttribute('data-telegram-post', postPath);
-  script.setAttribute('data-width', '100%');
-  script.setAttribute('data-dark', '1');
-  script.setAttribute('data-userpic', 'false');
-
-  wrap.appendChild(script);
-  container.innerHTML = '';
-  container.appendChild(wrap);
+  document.getElementById('heroSection').innerHTML = html;
 }
 
 /* ============================================================
