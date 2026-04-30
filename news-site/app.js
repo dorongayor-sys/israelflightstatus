@@ -40,6 +40,7 @@ const POSTS = [
     excerpt: 'לראשונה מזה שבע שנים חודשו הטיסות הישירות בין ארצות הברית לוונצואלה.',
     date: '2026-04-26',
     displayDate: '26 באפריל 2026',
+    image: 'https://cdn4.telesco.pe/file/rHEy7_5XLOTLz1OhXtHU6_19yMUDzB77wVQV5hB49u23ireWn0oqDMbUfynm253uhen3TNpDrY9xTDcVXDFf9onvdbvopEcZ6pCFtn5Qa1ePfcegryKSjwRFaYmliUxb47Cc0HbvD0XLyRV3vsZjIZllSGrpS46aSTSclQ1CZ_IaP3KMOlcHSjh2_T-WSPLEcTqXMGxVFqVy2gs85FO6XSPh9Q3BD7tKlHmvT37al-Cm4mF2nRJm0kD8VC0cT6AfUHodN0uiFNNEzkL8w1TRzOc5q_qz9g9lmoqq5x9nLFyMn3lce2b0kcXbaeUa6sEo7aSwpNWfkR99nGg0v9533A.jpg',
     telegramUrl: 'https://t.me/AviationupdatesDG/1143'
   },
   {
@@ -186,15 +187,22 @@ function renderHero(post) {
   const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
   const linkLabel = post.isStatusLink ? '← צפה בעוקב' : '← קרא בטלגרם';
 
+  const bgStyle = post.image
+    ? `background-image: url('${post.image}'); background-size: cover; background-position: center;`
+    : `background: ${gradient}`;
+
+  const creditHtml = post.imageCredit
+    ? `<span class="hero-photo-credit">📷 ${escape(post.imageCredit)}</span>`
+    : '';
+
   const html = `
     <a class="hero-card" href="${escape(linkUrl)}" target="_blank" rel="noopener" aria-label="${escape(post.title)}">
-      <div class="hero-bg" style="background:${gradient}"></div>
-      <div class="hero-dots"></div>
-      <div class="hero-plane-bg" aria-hidden="true">✈</div>
+      <div class="hero-bg" style="${bgStyle}"></div>
+      ${!post.image ? '<div class="hero-dots"></div><div class="hero-plane-bg" aria-hidden="true">✈</div>' : ''}
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="hero-badges">
-          ${post.breaking ? '<span class="breaking-badge">חדשות דחופות</span>' : ''}
+          ${post.breaking ? '<span class="breaking-badge">מבזק</span>' : ''}
           <span class="cat-badge" style="color:${cat.accent}; border-color:${cat.accent}40; background:${cat.accent}15;">
             ${cat.label}
           </span>
@@ -212,6 +220,7 @@ function renderHero(post) {
           </span>
         </div>
       </div>
+      ${creditHtml}
     </a>`;
 
   document.getElementById('heroSection').innerHTML = html;
