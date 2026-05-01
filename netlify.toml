@@ -2,7 +2,13 @@
   publish = "news-site"
   command = ""
 
-# React Router — send all other routes to index.html
+# Admin panel — serve directly
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+# All other routes → index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
