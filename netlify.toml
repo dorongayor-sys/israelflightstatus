@@ -8,7 +8,13 @@
   to = "/admin.html"
   status = 200
 
-# All other routes → index.html
+# Airline tracker — SPA fallback (must come before the catch-all)
+[[redirects]]
+  from = "/tracker/*"
+  to = "/tracker/index.html"
+  status = 200
+
+# All other routes → news site index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
