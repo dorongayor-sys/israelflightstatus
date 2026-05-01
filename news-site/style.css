@@ -246,7 +246,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .ticker-track {
   display: flex;
   white-space: nowrap;
-  animation: ticker 35s linear infinite;
+  animation: ticker 22s linear infinite;
   gap: 0;
   direction: rtl;
 }
