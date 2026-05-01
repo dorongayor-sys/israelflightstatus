@@ -84,13 +84,15 @@ router.post('/webhook', async (req, res) => {
 router.get('/posts', (req, res) => {
   try {
     const db = getDb();
+    // Pinned featured post first, then rest by date
     const rows = db.prepare(
-      "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-4 days') ORDER BY post_date DESC, message_id DESC LIMIT 50"
+      "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-4 days') ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 50"
     ).all();
 
+    const hasPinned = rows.some(p => p.is_featured === 1);
     const posts = rows.map((p, i) => ({
       id: p.message_id,
-      featured: i === 0,
+      featured: hasPinned ? p.is_featured === 1 : i === 0,
       breaking: p.is_breaking === 1,
       category: p.category,
       title: p.title,
@@ -191,13 +193,19 @@ router.patch('/posts/:id', requireAuth, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const db = getDb();
-    const { is_breaking, title, excerpt } = req.body;
+    const { is_breaking, is_featured, title, excerpt, photo_credit } = req.body;
     const fields = [];
     const vals = [];
-    if (is_breaking !== undefined) { fields.push('is_breaking = ?'); vals.push(is_breaking ? 1 : 0); }
-    if (title !== undefined)       { fields.push('title = ?');       vals.push(title); }
-    if (excerpt !== undefined)     { fields.push('excerpt = ?');     vals.push(excerpt); }
+    if (is_breaking !== undefined) { fields.push('is_breaking = ?');  vals.push(is_breaking ? 1 : 0); }
+    if (is_featured !== undefined) { fields.push('is_featured = ?');  vals.push(is_featured ? 1 : 0); }
+    if (title !== undefined)       { fields.push('title = ?');        vals.push(title); }
+    if (excerpt !== undefined)     { fields.push('excerpt = ?');      vals.push(excerpt); }
+    if (photo_credit !== undefined){ fields.push('photo_credit = ?'); vals.push(photo_credit || null); }
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+
+    // Only one post can be featured at a time
+    if (is_featured) db.prepare('UPDATE news_posts SET is_featured = 0').run();
+
     vals.push(id);
     db.prepare(`UPDATE news_posts SET ${fields.join(', ')} WHERE message_id = ?`).run(...vals);
 

@@ -118,9 +118,13 @@
       <label>כותרת</label>
       <textarea id="editTitle" rows="2"></textarea>
     </div>
-    <div class="form-group">
+    <div class="form-group" style="margin-bottom:12px">
       <label>תקציר</label>
       <textarea id="editExcerpt" rows="4"></textarea>
+    </div>
+    <div class="form-group">
+      <label>קרדיט תמונה</label>
+      <textarea id="editCredit" rows="1" placeholder="לדוגמה: דובר צה״ל"></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">ביטול</button>
@@ -210,6 +214,9 @@ function renderPosts() {
           </div>
         </div>
         <div class="post-actions">
+          <button class="btn-toggle ${p.featured ? 'on' : 'off'}" style="${p.featured ? 'background:#78350f;color:#fde68a;' : 'background:#1e293b;color:#94a3b8;border:1px solid #334155;'}" onclick="toggleFeatured(${p.id}, ${p.featured})">
+            ${p.featured ? '⭐ ראשי' : '☆ סמן ראשי'}
+          </button>
           <button class="btn-toggle ${p.breaking ? 'on' : 'off'}" onclick="toggleBreaking(${p.id}, ${p.breaking})">
             ${p.breaking ? '🚨 הסר מבזק' : '➕ סמן מבזק'}
           </button>
@@ -232,6 +239,16 @@ async function deletePost(id) {
   else { const d = await r.json(); alert(d.error || 'שגיאה'); }
 }
 
+async function toggleFeatured(id, current) {
+  if (!current && !confirm('לסמן פוסט זה ככותרת ראשית? הפוסט הנוכחי יוסר מהראשי.')) return;
+  const r = await fetch(`${API}/api/news/posts/${id}`, {
+    method: 'PATCH', headers: authHeader(),
+    body: JSON.stringify({ is_featured: !current })
+  });
+  if (r.ok) { await loadPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
 async function toggleBreaking(id, current) {
   const r = await fetch(`${API}/api/news/posts/${id}`, {
     method: 'PATCH', headers: authHeader(),
@@ -247,6 +264,7 @@ function openEdit(id) {
   editingId = id;
   document.getElementById('editTitle').value = post.title;
   document.getElementById('editExcerpt').value = post.excerpt;
+  document.getElementById('editCredit').value = post.photoCredit || '';
   document.getElementById('editModal').classList.add('open');
 }
 
@@ -258,9 +276,10 @@ function closeModal() {
 async function saveEdit() {
   const title = document.getElementById('editTitle').value.trim();
   const excerpt = document.getElementById('editExcerpt').value.trim();
+  const photo_credit = document.getElementById('editCredit').value.trim();
   const r = await fetch(`${API}/api/news/posts/${editingId}`, {
     method: 'PATCH', headers: authHeader(),
-    body: JSON.stringify({ title, excerpt })
+    body: JSON.stringify({ title, excerpt, photo_credit })
   });
   if (r.ok) { closeModal(); await loadPosts(); }
   else { const d = await r.json(); alert(d.error || 'שגיאה'); }

@@ -187,6 +187,7 @@ async function initDb() {
       photo_credit TEXT,
       post_date TEXT,
       is_breaking INTEGER NOT NULL DEFAULT 0,
+      is_featured INTEGER NOT NULL DEFAULT 0,
       hidden INTEGER NOT NULL DEFAULT 0,
       telegram_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -195,6 +196,8 @@ async function initDb() {
 
   // Migrate: add hidden column to news_posts if missing
   try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0'); } catch {}
+  // Migrate: add is_featured column to news_posts if missing
+  try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0'); } catch {}
 
   // Migrate: add sync_locked if missing
   try { sqlDb.exec('ALTER TABLE airlines ADD COLUMN sync_locked INTEGER NOT NULL DEFAULT 0'); } catch {}
