@@ -23,27 +23,34 @@ async function runNewsChannelSync() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
 
-    // Extract message blocks with id, date, text, and photo
-    const messageRe = /data-post="[^/]+\/(\d+)"[\s\S]*?datetime="([^"]+)"([\s\S]*?)(?=data-post="|<\/section>)/g;
+    // Split into per-message blocks using <div class="tgme_widget_message ..."> as delimiter
+    const blockRe = /<div class="tgme_widget_message [^"]*"[^>]*data-post="[^/]+\/(\d+)"[\s\S]*?(?=<div class="tgme_widget_message [^"]*"[^>]*data-post="|$)/g;
     const textRe = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/;
     const photoRe = /tgme_widget_message_photo_wrap[^>]+style="[^"]*url\('([^']+)'\)/;
+    const dateRe = /datetime="([^"]+)"/;
+
+    function cleanHtml(raw) {
+      return raw
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&#\d+;/g, '').replace(/&[a-z]+;/g, '')
+        .trim();
+    }
 
     const db = getDb();
     let saved = 0;
-
     let m;
-    while ((m = messageRe.exec(html)) !== null) {
+
+    while ((m = blockRe.exec(html)) !== null) {
       const messageId = parseInt(m[1], 10);
-      const isoDate = m[2].split('T')[0];
-      const block = m[3];
+      const block = m[0];
+
+      const dateMatch = dateRe.exec(block);
+      const isoDate = dateMatch ? dateMatch[1].split('T')[0] : new Date().toISOString().split('T')[0];
 
       const textMatch = textRe.exec(block);
-      const rawText = textMatch ? textMatch[1]
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, '').trim()
-        : '';
-
+      const rawText = textMatch ? cleanHtml(textMatch[1]) : '';
       if (!rawText) continue;
 
       const photoMatch = photoRe.exec(block);
