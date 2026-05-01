@@ -6,7 +6,7 @@
    ============================================================ */
 
 const CONFIG = {
-  airlineStatusUrl: 'https://israelflightstatustlv.netlify.app/', // existing airline status site
+  airlineStatusUrl: 'https://aviationupdates.netlify.app/', // existing airline status site
   telegramUrl: 'https://t.me/AviationupdatesDG',
   backendUrl: 'https://israelflightstatus.onrender.com'
 };
