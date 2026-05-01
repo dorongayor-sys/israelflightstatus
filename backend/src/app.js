@@ -8,6 +8,7 @@ const airlineRoutes = require('./routes/airlines');
 const changelogRoutes = require('./routes/changelog');
 const newsRoutes = require('./routes/news');
 const { applyOverrides } = require('./routes/news');
+const { applyAirlineOverrides } = require('./airlineOverrides');
 const { getDb } = require('./database/db');
 const { startAutoSync, runMakoSync, runTelegramSync, runEshetSync, runNewsChannelSync } = require('./autoSync');
 
@@ -60,12 +61,14 @@ app.get('/api/last-sync', (req, res) => {
 async function main() {
   await initDb();
 
+  // Re-apply admin airline changes saved to Render env var (survives DB wipes)
+  await applyAirlineOverrides(getDb());
+
   app.listen(PORT, () => {
     console.log(`Aviation Updates API running on http://localhost:${PORT}`);
   });
 
-  // Start auto-sync first so news posts are populated,
-  // then applyOverrides runs at the end of runNewsChannelSync.
+  // News overrides are re-applied inside runNewsChannelSync after each scrape
   startAutoSync();
 }
 

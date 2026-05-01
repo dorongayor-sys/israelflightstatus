@@ -1,6 +1,7 @@
 const express = require('express');
 const { getDb } = require('../database/db');
 const { requireAuth } = require('../middleware/auth');
+const { loadAirlineOverrides, saveAirlineOverrides } = require('../airlineOverrides');
 
 const router = express.Router();
 
@@ -59,6 +60,20 @@ router.post('/', requireAuth, (req, res) => {
   const created = db.prepare('SELECT * FROM airlines WHERE id = ?').get(result.lastInsertRowid);
   logChange(db, created.id, created.name, 'created', null, null, status);
 
+  if (created.iata_code) {
+    loadAirlineOverrides().then(o => {
+      o.added = (o.added || []).filter(a => a.iata_code !== created.iata_code);
+      o.added.push({
+        name: created.name, iata_code: created.iata_code, status: created.status,
+        destinations: JSON.parse(created.destinations || '[]'),
+        cancellation_reason: created.cancellation_reason, cancellation_end_date: created.cancellation_end_date,
+        notes: created.notes, website: created.website, terminal: created.terminal,
+        is_israeli: created.is_israeli,
+      });
+      saveAirlineOverrides(o);
+    });
+  }
+
   res.status(201).json(parseAirline(created));
 });
 
@@ -111,6 +126,20 @@ router.put('/:id', requireAuth, (req, res) => {
   );
 
   const updated = db.prepare('SELECT * FROM airlines WHERE id = ?').get(id);
+
+  if (updated.iata_code) {
+    loadAirlineOverrides().then(o => {
+      o.updates = o.updates || {};
+      o.updates[updated.iata_code] = {
+        name: updated.name, status: updated.status,
+        destinations: JSON.parse(updated.destinations || '[]'),
+        cancellation_reason: updated.cancellation_reason, cancellation_end_date: updated.cancellation_end_date,
+        notes: updated.notes, website: updated.website, terminal: updated.terminal,
+      };
+      saveAirlineOverrides(o);
+    });
+  }
+
   res.json(parseAirline(updated));
 });
 
@@ -122,6 +151,16 @@ router.delete('/:id', requireAuth, (req, res) => {
 
   logChange(db, existing.id, existing.name, 'deleted', null, existing.status, null);
   db.prepare('DELETE FROM airlines WHERE id = ?').run(req.params.id);
+
+  if (existing.iata_code) {
+    loadAirlineOverrides().then(o => {
+      delete (o.updates || {})[existing.iata_code];
+      o.added = (o.added || []).filter(a => a.iata_code !== existing.iata_code);
+      o.deleted = o.deleted || [];
+      if (!o.deleted.includes(existing.iata_code)) o.deleted.push(existing.iata_code);
+      saveAirlineOverrides(o);
+    });
+  }
 
   res.json({ message: 'Airline deleted successfully' });
 });
