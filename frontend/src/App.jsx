@@ -27,7 +27,7 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/tracker">
       <Routes>
         <Route path="/" element={<PublicView />} />
         <Route path="/manage-x7k2" element={<Login />} />
