@@ -115,6 +115,21 @@
     </div>
   </main>
 
+  <!-- Post detail modal -->
+  <div id="postModal" class="post-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display:none;" onclick="closePostModal(event)">
+    <div class="post-modal">
+      <button class="post-modal-close" onclick="closePostModal()" aria-label="סגור">✕</button>
+      <div id="modalImg" class="post-modal-img" style="display:none;"></div>
+      <div class="post-modal-body">
+        <div id="modalBadges" class="post-modal-badges"></div>
+        <h2 id="modalTitle" class="post-modal-title"></h2>
+        <p id="modalDate" class="post-modal-date"></p>
+        <div id="modalText" class="post-modal-text"></div>
+        <p id="modalCredit" class="post-modal-credit" style="display:none;"></p>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="site-footer">
     <div class="container">

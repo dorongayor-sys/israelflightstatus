@@ -99,6 +99,7 @@ router.get('/posts', (req, res) => {
       displayDate: formatHebrewDate(p.post_date),
       photoFileId: p.photo_file_id || null,
       photoCredit: p.photo_credit || null,
+      fullText: p.full_text || null,
       telegramUrl: p.telegram_url,
       isStatusLink: p.category === 'status'
     }));

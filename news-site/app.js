@@ -88,7 +88,7 @@ function renderHero(post) {
   }
 
   const html = `
-    <div class="hero-card" aria-label="${escape(post.title)}">
+    <div class="hero-card" aria-label="${escape(post.title)}" onclick="openPostModal(${post.id})" style="cursor:pointer;">
       <div class="hero-bg" style="${bgStyle}"></div>
       <div class="hero-dots"></div>
       <div class="hero-plane-bg" aria-hidden="true">✈</div>
@@ -118,12 +118,10 @@ function renderHero(post) {
 
 function renderCard(post) {
   const cat = getCat(post.category);
-  const linkUrl = post.isStatusLink ? CONFIG.airlineStatusUrl : post.telegramUrl;
-  const linkLabel = post.isStatusLink ? '← פתח עוקב' : '← קרא בטלגרם';
   const timeAgo = formatDate(post.date);
 
   return `
-    <article class="news-card" data-category="${escape(post.category)}" role="listitem">
+    <article class="news-card" data-category="${escape(post.category)}" role="listitem" onclick="openPostModal(${post.id})">
       <div class="card-header">
         <span class="card-cat-badge ${cat.badgeClass}">${cat.label}</span>
         ${post.breaking ? '<span class="card-alert">🚨 מבזק</span>' : ''}
@@ -137,6 +135,57 @@ function renderCard(post) {
       </div>
     </article>`;
 }
+
+/* ============================================================
+   POST DETAIL MODAL
+   ============================================================ */
+
+function openPostModal(id) {
+  const post = POSTS.find(p => p.id === id);
+  if (!post) return;
+
+  const cat = getCat(post.category);
+
+  // Photo
+  const imgEl = document.getElementById('modalImg');
+  if (post.photoFileId) {
+    const src = `${CONFIG.backendUrl}/api/news/image/${encodeURIComponent(post.photoFileId)}`;
+    imgEl.innerHTML = `<img src="${src}" alt="${escape(post.title)}" />`;
+    imgEl.style.display = 'block';
+  } else {
+    imgEl.style.display = 'none';
+    imgEl.innerHTML = '';
+  }
+
+  // Badges
+  document.getElementById('modalBadges').innerHTML = `
+    ${post.breaking ? '<span class="breaking-badge">מבזק</span>' : ''}
+    <span class="cat-badge" style="color:${cat.accent};border-color:${cat.accent}40;background:${cat.accent}15;">${cat.label}</span>`;
+
+  document.getElementById('modalTitle').textContent = post.title;
+  document.getElementById('modalDate').textContent = '📅 ' + post.displayDate;
+  document.getElementById('modalText').textContent = post.fullText || post.excerpt;
+
+  const creditEl = document.getElementById('modalCredit');
+  if (post.photoCredit) {
+    creditEl.textContent = '📷 ' + post.photoCredit;
+    creditEl.style.display = 'block';
+  } else {
+    creditEl.style.display = 'none';
+  }
+
+  const modal = document.getElementById('postModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closePostModal(e) {
+  if (e && e.target !== document.getElementById('postModal') && !e.target.classList.contains('post-modal-close')) return;
+  document.getElementById('postModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('postModal').style.display = 'none'; document.body.style.overflow = ''; } });
 
 function renderGrid(posts) {
   const grid = document.getElementById('newsGrid');
