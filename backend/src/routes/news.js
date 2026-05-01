@@ -85,7 +85,7 @@ router.get('/posts', (req, res) => {
   try {
     const db = getDb();
     const rows = db.prepare(
-      'SELECT * FROM news_posts ORDER BY post_date DESC, message_id DESC LIMIT 50'
+      "SELECT * FROM news_posts WHERE post_date >= date('now', '-4 days') ORDER BY post_date DESC, message_id DESC LIMIT 50"
     ).all();
 
     const posts = rows.map((p, i) => ({
