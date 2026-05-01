@@ -7,7 +7,7 @@ const authRoutes = require('./routes/auth');
 const airlineRoutes = require('./routes/airlines');
 const changelogRoutes = require('./routes/changelog');
 const newsRoutes = require('./routes/news');
-const { startAutoSync, runMakoSync, runTelegramSync, runEshetSync } = require('./autoSync');
+const { startAutoSync, runMakoSync, runTelegramSync, runEshetSync, runNewsChannelSync } = require('./autoSync');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,6 +31,7 @@ app.post('/api/sync', async (req, res) => {
     await runMakoSync();
     await runTelegramSync();
     await runEshetSync();
+    await runNewsChannelSync();
     const { getDb } = require('./database/db');
     const db = getDb();
     const row = db.prepare('SELECT value FROM sync_meta WHERE key = ?').get('last_sync');

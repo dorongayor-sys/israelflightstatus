@@ -104,13 +104,20 @@ router.get('/posts', (req, res) => {
   }
 });
 
-// GET /api/news/image/:fileId — proxy from Telegram
+// GET /api/news/image/:fileId — proxy from Telegram or redirect CDN URL
 router.get('/image/:fileId', async (req, res) => {
   try {
+    const fileId = decodeURIComponent(req.params.fileId);
+
+    // CDN URL stored directly (from web scrape) — redirect
+    if (fileId.startsWith('http')) {
+      return res.redirect(302, fileId);
+    }
+
     if (!BOT_TOKEN) return res.status(503).send('Bot token not configured');
 
     const fileRes = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${req.params.fileId}`
+      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
     );
     const fileData = await fileRes.json();
     if (!fileData.ok || !fileData.result?.file_path) {

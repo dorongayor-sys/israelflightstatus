@@ -2,6 +2,86 @@ const { getDb } = require('./database/db');
 
 const MAKO_INTERVAL_MS = 15 * 60 * 1000; // every 15 minutes
 const TELEGRAM_INTERVAL_MS = 15 * 60 * 1000; // every 15 minutes
+const NEWS_SYNC_INTERVAL_MS = 10 * 60 * 1000; // every 10 minutes
+
+// ── News channel scraper (AviationupdatesDG) ──────────────────────────────
+
+const NEWS_CHANNEL = process.env.TELEGRAM_NEWS_CHANNEL || 'AviationupdatesDG';
+
+function detectCategory(text) {
+  if (/התראה|הונאה|אזהרה|⚠|🚨/.test(text)) return 'security';
+  if (/יום הזיכרון|הר הטייסים|נפל\b|שנפל/.test(text)) return 'memorial';
+  if (/כטב"מ|חיל האוויר|צה"ל|נושאת|חיזבאללה|מטוס קרב|F-16|F-35|UAV/i.test(text)) return 'military';
+  if (/סטטוס|עוקב|tracker|dashboard/i.test(text)) return 'status';
+  return 'civil';
+}
+
+async function runNewsChannelSync() {
+  try {
+    console.log('[NewsSync] Fetching channel page...');
+    const res = await fetch(`https://t.me/s/${NEWS_CHANNEL}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+
+    // Extract message blocks with id, date, text, and photo
+    const messageRe = /data-post="[^/]+\/(\d+)"[\s\S]*?datetime="([^"]+)"([\s\S]*?)(?=data-post="|<\/section>)/g;
+    const textRe = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/;
+    const photoRe = /tgme_widget_message_photo_wrap[^>]+style="[^"]*url\('([^']+)'\)/;
+
+    const db = getDb();
+    let saved = 0;
+
+    let m;
+    while ((m = messageRe.exec(html)) !== null) {
+      const messageId = parseInt(m[1], 10);
+      const isoDate = m[2].split('T')[0];
+      const block = m[3];
+
+      const textMatch = textRe.exec(block);
+      const rawText = textMatch ? textMatch[1]
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, '').trim()
+        : '';
+
+      if (!rawText) continue;
+
+      const photoMatch = photoRe.exec(block);
+      const photoUrl = photoMatch ? photoMatch[1] : null;
+
+      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+      let photoCredit = null;
+      const creditLine = lines[lines.length - 1];
+      if (/^(צילום|קרדיט|photo credit|📷)/i.test(creditLine)) {
+        photoCredit = creditLine.replace(/^(צילום|קרדיט|photo credit|📷)[:\s]*/i, '').trim();
+        lines.pop();
+      }
+
+      const title = lines[0] || rawText.substring(0, 120);
+      const excerpt = lines.slice(1).join(' ').substring(0, 300) || title;
+      const category = detectCategory(rawText);
+      const isBreaking = /🚨|מבזק/.test(rawText) ? 1 : 0;
+
+      const existing = db.prepare('SELECT id FROM news_posts WHERE message_id = ?').get(messageId);
+      if (existing) continue;
+
+      db.prepare(`
+        INSERT OR IGNORE INTO news_posts
+          (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        messageId, category, title, excerpt, rawText,
+        photoUrl, photoCredit, isoDate, isBreaking,
+        `https://t.me/${NEWS_CHANNEL}/${messageId}`
+      );
+      saved++;
+    }
+
+    console.log(`[NewsSync] Done — ${saved} new post(s) saved`);
+  } catch (err) {
+    console.error(`[NewsSync] Error: ${err.message}`);
+  }
+}
 
 // ── Telegram channel scraper (Israel Airports Authority) ───────────────────
 
@@ -522,6 +602,9 @@ function startAutoSync() {
 
   runEshetSync();
   setInterval(runEshetSync, ESHET_INTERVAL_MS);
+
+  runNewsChannelSync();
+  setInterval(runNewsChannelSync, NEWS_SYNC_INTERVAL_MS);
 }
 
-module.exports = { startAutoSync, runMakoSync, runTelegramSync, runEshetSync };
+module.exports = { startAutoSync, runMakoSync, runTelegramSync, runEshetSync, runNewsChannelSync };
