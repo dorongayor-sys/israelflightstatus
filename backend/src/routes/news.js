@@ -85,7 +85,7 @@ router.get('/posts', (req, res) => {
   try {
     const db = getDb();
     const rows = db.prepare(
-      "SELECT * FROM news_posts WHERE post_date >= date('now', '-4 days') ORDER BY post_date DESC, message_id DESC LIMIT 50"
+      "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-4 days') ORDER BY post_date DESC, message_id DESC LIMIT 50"
     ).all();
 
     const posts = rows.map((p, i) => ({
@@ -145,12 +145,40 @@ router.get('/image/:fileId', async (req, res) => {
 
 // ── Admin routes (require JWT) ────────────────────────────────────────────
 const { requireAuth } = require('../middleware/auth');
+const fs = require('fs');
+const path = require('path');
 
-// DELETE /api/news/posts/:id
+const OVERRIDES_PATH = path.join(__dirname, '../../data/admin_overrides.json');
+
+function loadOverrides() {
+  try { return JSON.parse(fs.readFileSync(OVERRIDES_PATH, 'utf8')); } catch { return { hidden: [], breaking: [] }; }
+}
+
+function saveOverrides(overrides) {
+  try {
+    fs.mkdirSync(path.dirname(OVERRIDES_PATH), { recursive: true });
+    fs.writeFileSync(OVERRIDES_PATH, JSON.stringify(overrides));
+  } catch (e) { console.error('[Overrides] Save failed:', e.message); }
+}
+
+function applyOverrides(db) {
+  const o = loadOverrides();
+  for (const id of o.hidden)   db.prepare('UPDATE news_posts SET hidden = 1 WHERE message_id = ?').run(id);
+  for (const id of o.breaking) db.prepare('UPDATE news_posts SET is_breaking = 1 WHERE message_id = ?').run(id);
+}
+
+// Called on startup from app.js
+router.applyOverrides = applyOverrides;
+
+// DELETE /api/news/posts/:id — soft delete
 router.delete('/posts/:id', requireAuth, (req, res) => {
   try {
+    const id = parseInt(req.params.id, 10);
     const db = getDb();
-    db.prepare('DELETE FROM news_posts WHERE message_id = ?').run(req.params.id);
+    db.prepare('UPDATE news_posts SET hidden = 1 WHERE message_id = ?').run(id);
+    const o = loadOverrides();
+    if (!o.hidden.includes(id)) { o.hidden.push(id); o.breaking = o.breaking.filter(x => x !== id); }
+    saveOverrides(o);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -160,6 +188,7 @@ router.delete('/posts/:id', requireAuth, (req, res) => {
 // PATCH /api/news/posts/:id — update breaking flag and/or title/excerpt
 router.patch('/posts/:id', requireAuth, (req, res) => {
   try {
+    const id = parseInt(req.params.id, 10);
     const db = getDb();
     const { is_breaking, title, excerpt } = req.body;
     const fields = [];
@@ -168,8 +197,15 @@ router.patch('/posts/:id', requireAuth, (req, res) => {
     if (title !== undefined)       { fields.push('title = ?');       vals.push(title); }
     if (excerpt !== undefined)     { fields.push('excerpt = ?');     vals.push(excerpt); }
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
-    vals.push(req.params.id);
+    vals.push(id);
     db.prepare(`UPDATE news_posts SET ${fields.join(', ')} WHERE message_id = ?`).run(...vals);
+
+    if (is_breaking !== undefined) {
+      const o = loadOverrides();
+      if (is_breaking) { if (!o.breaking.includes(id)) o.breaking.push(id); }
+      else             { o.breaking = o.breaking.filter(x => x !== id); }
+      saveOverrides(o);
+    }
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

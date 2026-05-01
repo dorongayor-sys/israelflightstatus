@@ -36,6 +36,7 @@ app.post('/api/sync', async (req, res) => {
     await runTelegramSync();
     await runEshetSync();
     await runNewsChannelSync();
+    applyOverrides(getDb());
     const { getDb } = require('./database/db');
     const db = getDb();
     const row = db.prepare('SELECT value FROM sync_meta WHERE key = ?').get('last_sync');
@@ -58,6 +59,11 @@ app.get('/api/last-sync', (req, res) => {
 
 async function main() {
   await initDb();
+  // Re-apply admin overrides (hidden/breaking) after DB init
+  const { applyOverrides } = require('./routes/news');
+  const { getDb } = require('./database/db');
+  applyOverrides(getDb());
+
   app.listen(PORT, () => {
     console.log(`Aviation Updates API running on http://localhost:${PORT}`);
   });
