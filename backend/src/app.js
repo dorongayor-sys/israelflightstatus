@@ -7,6 +7,8 @@ const authRoutes = require('./routes/auth');
 const airlineRoutes = require('./routes/airlines');
 const changelogRoutes = require('./routes/changelog');
 const newsRoutes = require('./routes/news');
+const { applyOverrides } = require('./routes/news');
+const { getDb } = require('./database/db');
 const { startAutoSync, runMakoSync, runTelegramSync, runEshetSync, runNewsChannelSync } = require('./autoSync');
 
 const app = express();
@@ -35,9 +37,7 @@ app.post('/api/sync', async (req, res) => {
     await runMakoSync();
     await runTelegramSync();
     await runEshetSync();
-    await runNewsChannelSync();
-    await applyOverrides(getDb());
-    const { getDb } = require('./database/db');
+    await runNewsChannelSync(); // applyOverrides is called inside runNewsChannelSync
     const db = getDb();
     const row = db.prepare('SELECT value FROM sync_meta WHERE key = ?').get('last_sync');
     res.json({ ok: true, last_sync: row ? row.value : null });
@@ -59,14 +59,13 @@ app.get('/api/last-sync', (req, res) => {
 
 async function main() {
   await initDb();
-  // Re-apply admin overrides (hidden/breaking/featured/edits) after DB init
-  const { applyOverrides } = require('./routes/news');
-  const { getDb } = require('./database/db');
-  await applyOverrides(getDb());
 
   app.listen(PORT, () => {
     console.log(`Aviation Updates API running on http://localhost:${PORT}`);
   });
+
+  // Start auto-sync first so news posts are populated,
+  // then applyOverrides runs at the end of runNewsChannelSync.
   startAutoSync();
 }
 

@@ -25,7 +25,7 @@ export default function AirlineForm({ initial = null, onSubmit, onCancel, loadin
       notes: initial.notes || '',
       website: initial.website || '',
       terminal: initial.terminal || '',
-      sync_locked: !!initial.sync_locked,
+      sync_locked: true, // always lock when admin edits to prevent auto-sync from overwriting
     };
   });
 
@@ -194,7 +194,7 @@ export default function AirlineForm({ initial = null, onSubmit, onCancel, loadin
       <label className="flex items-center justify-between gap-3 bg-slate-800/60 border border-slate-700 rounded-lg px-4 py-3 cursor-pointer hover:bg-slate-800 transition-colors">
         <div>
           <p className="text-sm font-medium text-slate-300">Lock from auto-sync</p>
-          <p className="text-xs text-slate-500 mt-0.5">Status won't be changed automatically by the 30-min sync</p>
+          <p className="text-xs text-slate-500 mt-0.5">Keep this ON to protect your changes from being overwritten by auto-sync</p>
         </div>
         <div
           onClick={() => setForm((prev) => ({ ...prev, sync_locked: !prev.sync_locked }))}

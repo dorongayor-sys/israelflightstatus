@@ -14,8 +14,8 @@ const CONFIG = {
 /* ── Category definitions ── */
 const CATEGORIES = {
   civil:    { label: 'תעופה אזרחית',   color: 'blue',   accent: '#3b82f6', badgeClass: 'badge-civil' },
-  military: { label: 'צבאי',           color: 'purple', accent: '#a855f7', badgeClass: 'badge-military' },
-  security: { label: 'התראת ביטחון',   color: 'red',    accent: '#ef4444', badgeClass: 'badge-security' },
+  military: { label: 'תעופה צבאית',    color: 'purple', accent: '#a855f7', badgeClass: 'badge-military' },
+  security: { label: 'תעופה צבאית',    color: 'purple', accent: '#a855f7', badgeClass: 'badge-military' },
   status:   { label: 'עדכון סטטוס',    color: 'green',  accent: '#22c55e', badgeClass: 'badge-status' },
   aviation: { label: 'תעופה',          color: 'cyan',   accent: '#06b6d4', badgeClass: 'badge-aviation' },
   memorial: { label: 'יום זיכרון',     color: 'indigo', accent: '#6366f1', badgeClass: 'badge-memorial' }
@@ -25,7 +25,7 @@ const CATEGORIES = {
 const HERO_GRADIENTS = {
   civil:    'linear-gradient(135deg, #0c1b40 0%, #0d2860 60%, #0c1b40 100%)',
   military: 'linear-gradient(135deg, #180b30 0%, #2d1060 60%, #180b30 100%)',
-  security: 'linear-gradient(135deg, #2a0808 0%, #4c1010 60%, #2a0808 100%)',
+  security: 'linear-gradient(135deg, #180b30 0%, #2d1060 60%, #180b30 100%)',
   status:   'linear-gradient(135deg, #082a14 0%, #0d4a24 60%, #082a14 100%)',
   aviation: 'linear-gradient(135deg, #081e2e 0%, #0d3a52 60%, #081e2e 100%)',
   memorial: 'linear-gradient(135deg, #10103a 0%, #1e1e6a 60%, #10103a 100%)'
@@ -231,10 +231,13 @@ function filterPosts(category) {
   }
 
   // Filter posts (excluding featured)
+  // 'military' tab shows both military and security posts (unified as "תעופה צבאית")
   const nonFeatured = POSTS.filter(p => !p.featured);
   const filtered = category === 'all'
     ? nonFeatured
-    : nonFeatured.filter(p => p.category === category);
+    : category === 'military'
+      ? nonFeatured.filter(p => p.category === 'military' || p.category === 'security')
+      : nonFeatured.filter(p => p.category === category);
 
   renderGrid(filtered);
 }

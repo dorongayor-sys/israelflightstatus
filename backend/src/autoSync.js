@@ -92,6 +92,11 @@ async function runNewsChannelSync() {
     }
 
     console.log(`[NewsSync] Done — ${saved} new post(s) saved`);
+
+    // Re-apply admin overrides (hidden/breaking/featured/edits) after every sync,
+    // because Render wipes the DB on restart and the scraper runs after applyOverrides on startup.
+    const { applyOverrides } = require('./routes/news');
+    await applyOverrides(db);
   } catch (err) {
     console.error(`[NewsSync] Error: ${err.message}`);
   }
