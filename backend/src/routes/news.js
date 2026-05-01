@@ -35,7 +35,7 @@ router.post('/webhook', async (req, res) => {
     const message = update.channel_post || update.message;
     if (!message) return res.json({ ok: true });
 
-    const text = (message.caption || message.text || '').trim();
+    const text = (message.caption || message.text || '').replace(/https?:\/\/t\.me\/\S+/g, '').trim();
     if (!text) return res.json({ ok: true });
 
     const date = new Date(message.date * 1000);
