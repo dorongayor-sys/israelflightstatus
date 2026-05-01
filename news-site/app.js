@@ -138,6 +138,10 @@ function renderCard(post) {
         <p class="card-excerpt">${escape(post.excerpt)}</p>
         <div class="card-footer">
           <span class="card-date" title="${post.displayDate}">${timeAgo}</span>
+          <a href="${escape(post.telegramUrl)}" target="_blank" rel="noopener" class="card-tg-btn" onclick="event.stopPropagation()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.196 14.26l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.007.131.625.326z"/></svg>
+            קרא בטלגרם
+          </a>
         </div>
       </div>
     </article>`;
