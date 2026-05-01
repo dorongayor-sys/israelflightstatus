@@ -8,7 +8,7 @@
 const CONFIG = {
   airlineStatusUrl: 'https://israelflightstatustlv.netlify.app/', // existing airline status site
   telegramUrl: 'https://t.me/AviationupdatesDG',
-  backendUrl: 'REPLACE_WITH_RAILWAY_URL'
+  backendUrl: 'https://israelflightstatus.onrender.com'
 };
 
 /* ── Category definitions ── */
