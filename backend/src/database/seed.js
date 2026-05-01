@@ -16,10 +16,10 @@ async function seed() {
   db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username, hash);
   console.log(`Admin user set: ${username}`);
 
-  // Seed airlines
-  // To re-seed: delete backend/data/aviation.db and re-run this script
-  const airlinesCount = db.prepare('SELECT COUNT(*) as count FROM airlines').get().count;
-  if (airlinesCount > 0) {
+  // Seed airlines — use a sync_meta flag so DB migrations adding rows don't
+  // falsely trigger the "already seeded" guard (e.g. ALK Airlines / FlyLili).
+  const seededFlag = db.prepare("SELECT value FROM sync_meta WHERE key = 'airlines_seeded'").get();
+  if (seededFlag) {
     console.log('Airlines already seeded, skipping...');
     return;
   }
@@ -713,6 +713,7 @@ async function seed() {
   });
 
   insertMany(airlines);
+  db.prepare("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('airlines_seeded', '1')").run();
   console.log(`Seeded ${airlines.length} airlines`);
   console.log('\nDone! Start the server with: npm run dev');
 }
