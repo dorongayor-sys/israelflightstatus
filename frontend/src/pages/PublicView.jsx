@@ -82,7 +82,15 @@ export default function PublicView() {
 
   useEffect(() => {
     api.get('/airlines')
-      .then(({ data }) => setAirlines(data || []))
+      .then(({ data }) => {
+        // Guard: API may return HTML (e.g. Netlify catch-all) instead of JSON array
+        if (Array.isArray(data) && data.length > 0) {
+          setAirlines(data);
+        } else {
+          setAirlines(staticData.airlines || []);
+          if (staticData.exported_at) setLastSync(staticData.exported_at);
+        }
+      })
       .catch(() => {
         // No backend available (e.g. Netlify static deploy) — use bundled snapshot
         setAirlines(staticData.airlines || []);

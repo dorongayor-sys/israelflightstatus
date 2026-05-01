@@ -21,4 +21,4 @@ services:
       - key: TELEGRAM_WEBHOOK_SECRET
         value: aviation-webhook-secret-2024
       - key: FRONTEND_URL
-        value: https://israelflightstatustlv.netlify.app
+        value: https://israelflightstatustlv.netlify.app,https://aviationupdates.netlify.app
