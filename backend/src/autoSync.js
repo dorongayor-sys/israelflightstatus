@@ -38,6 +38,7 @@ async function runNewsChannelSync() {
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<[^>]+>/g, '')
         .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"').replace(/&#34;/g, '"').replace(/&#39;/g, "'")
         .replace(/&#\d+;/g, '').replace(/&[a-z]+;/g, '')
         .replace(/https?:\/\/t\.me\/\S+/g, '')
         .replace(/\s+$/, '')
