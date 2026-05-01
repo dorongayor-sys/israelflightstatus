@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: aviation-updates-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_NEWS_CHANNEL
+        value: AviationupdatesDG
+      - key: TELEGRAM_WEBHOOK_SECRET
+        value: aviation-webhook-secret-2024
+      - key: FRONTEND_URL
+        value: https://israelflightstatustlv.netlify.app
