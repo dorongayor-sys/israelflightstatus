@@ -22,6 +22,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/airlines', airlineRoutes);
 app.use('/api/changelog', changelogRoutes);
 app.use('/api/news', newsRoutes);
+app.get('/admin', (req, res) => {
+  res.sendFile(require('path').join(__dirname, 'admin.html'));
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

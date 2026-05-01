@@ -143,4 +143,37 @@ router.get('/image/:fileId', async (req, res) => {
   }
 });
 
+// ── Admin routes (require JWT) ────────────────────────────────────────────
+const { requireAuth } = require('../middleware/auth');
+
+// DELETE /api/news/posts/:id
+router.delete('/posts/:id', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    db.prepare('DELETE FROM news_posts WHERE message_id = ?').run(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/news/posts/:id — update breaking flag and/or title/excerpt
+router.patch('/posts/:id', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    const { is_breaking, title, excerpt } = req.body;
+    const fields = [];
+    const vals = [];
+    if (is_breaking !== undefined) { fields.push('is_breaking = ?'); vals.push(is_breaking ? 1 : 0); }
+    if (title !== undefined)       { fields.push('title = ?');       vals.push(title); }
+    if (excerpt !== undefined)     { fields.push('excerpt = ?');     vals.push(excerpt); }
+    if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+    vals.push(req.params.id);
+    db.prepare(`UPDATE news_posts SET ${fields.join(', ')} WHERE message_id = ?`).run(...vals);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
