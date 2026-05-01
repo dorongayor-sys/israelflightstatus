@@ -5,6 +5,11 @@ const { getDb } = require('../database/db');
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHANNEL = process.env.TELEGRAM_NEWS_CHANNEL || 'AviationupdatesDG';
 
+function cleanTitle(title) {
+  // Strip leading red/stop emojis (🛑, 🔴, ⚠️, 🚨) and surrounding whitespace
+  return title.replace(/^[\s🛑🔴⚠️🚨]+/, '').trim();
+}
+
 function detectCategory(text) {
   if (/התראה|הונאה|אזהרה|⚠|🚨/.test(text)) return 'security';
   if (/יום הזיכרון|הר הטייסים|נפל\b|שנפל/.test(text)) return 'memorial';
@@ -51,7 +56,7 @@ router.post('/webhook', async (req, res) => {
       lines.pop();
     }
 
-    const title = lines[0] || text.substring(0, 120);
+    const title = cleanTitle(lines[0] || text.substring(0, 120));
     const excerpt = lines.slice(1).join(' ').substring(0, 300) || title;
     const category = detectCategory(text);
     const isBreaking = /🚨|מבזק/.test(text);

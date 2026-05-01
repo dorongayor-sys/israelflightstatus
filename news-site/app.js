@@ -88,7 +88,7 @@ function renderHero(post) {
   }
 
   const html = `
-    <a class="hero-card" href="${escape(linkUrl)}" target="_blank" rel="noopener" aria-label="${escape(post.title)}">
+    <div class="hero-card" aria-label="${escape(post.title)}">
       <div class="hero-bg" style="${bgStyle}"></div>
       <div class="hero-dots"></div>
       <div class="hero-plane-bg" aria-hidden="true">✈</div>
@@ -104,17 +104,10 @@ function renderHero(post) {
         <p class="hero-excerpt">${escape(post.excerpt)}</p>
         <div class="hero-meta">
           <span class="hero-date">📅 ${post.displayDate}</span>
-          <span class="hero-btn">
-            ← קרא בטלגרם
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
-            </svg>
-          </span>
         </div>
       </div>
       ${creditHtml}
-    </a>`;
+    </div>`;
 
   document.getElementById('heroSection').innerHTML = html;
 }
@@ -140,13 +133,6 @@ function renderCard(post) {
         <p class="card-excerpt">${escape(post.excerpt)}</p>
         <div class="card-footer">
           <span class="card-date" title="${post.displayDate}">${timeAgo}</span>
-          <a href="${escape(linkUrl)}" target="_blank" rel="noopener" class="card-link" aria-label="${escape(post.title)} — ${linkLabel}">
-            ${linkLabel}
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
-            </svg>
-          </a>
         </div>
       </div>
     </article>`;

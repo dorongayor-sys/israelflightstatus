@@ -8,6 +8,10 @@ const NEWS_SYNC_INTERVAL_MS = 10 * 60 * 1000; // every 10 minutes
 
 const NEWS_CHANNEL = process.env.TELEGRAM_NEWS_CHANNEL || 'AviationupdatesDG';
 
+function cleanTitle(title) {
+  return title.replace(/^[\s🛑🔴⚠️🚨]+/, '').trim();
+}
+
 function detectCategory(text) {
   if (/התראה|הונאה|אזהרה|⚠|🚨/.test(text)) return 'security';
   if (/יום הזיכרון|הר הטייסים|נפל\b|שנפל/.test(text)) return 'memorial';
@@ -64,7 +68,7 @@ async function runNewsChannelSync() {
         lines.pop();
       }
 
-      const title = lines[0] || rawText.substring(0, 120);
+      const title = cleanTitle(lines[0] || rawText.substring(0, 120));
       const excerpt = lines.slice(1).join(' ').substring(0, 300) || title;
       const category = detectCategory(rawText);
       const isBreaking = /🚨|מבזק/.test(rawText) ? 1 : 0;
