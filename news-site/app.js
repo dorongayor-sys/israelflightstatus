@@ -120,8 +120,15 @@ function renderCard(post) {
   const cat = getCat(post.category);
   const timeAgo = formatDate(post.date);
 
+  const photoHtml = post.photoFileId ? `
+    <div class="card-photo">
+      <img src="${CONFIG.backendUrl}/api/news/image/${encodeURIComponent(post.photoFileId)}" alt="${escape(post.title)}" loading="lazy" />
+      ${post.photoCredit ? `<span class="card-photo-credit">📷 ${escape(post.photoCredit)}</span>` : ''}
+    </div>` : '';
+
   return `
     <article class="news-card" data-category="${escape(post.category)}" role="listitem" onclick="openPostModal(${post.id})">
+      ${photoHtml}
       <div class="card-header">
         <span class="card-cat-badge ${cat.badgeClass}">${cat.label}</span>
         ${post.breaking ? '<span class="card-alert">🚨 מבזק</span>' : ''}
