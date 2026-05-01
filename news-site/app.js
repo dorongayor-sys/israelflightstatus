@@ -171,7 +171,7 @@ function openPostModal(id) {
 
   document.getElementById('modalTitle').textContent = post.title;
   document.getElementById('modalDate').textContent = '📅 ' + post.displayDate;
-  document.getElementById('modalText').textContent = post.fullText || post.excerpt;
+  document.getElementById('modalText').textContent = post.excerpt || post.fullText;
 
   const creditEl = document.getElementById('modalCredit');
   if (post.photoCredit) {
