@@ -2,12 +2,25 @@
   publish = "news-site"
   command = ""
 
-# Admin panel — serve directly
+# Sitemap — serve directly, no redirect
 [[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"
   status = 200
   force = true
+
+# Robots — serve directly
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+  force = true
+
+# Admin panel — serve directly
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
 
 # Airline tracker — SPA fallback (must come before the catch-all)
 [[redirects]]
