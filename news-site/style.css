@@ -855,26 +855,23 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .top-bar .container { justify-content: center; }
   .top-date { display: none; }
 
-  /* Ticker — single line, smaller font, no fade */
-  .ticker-bar { padding: 7px 0; }
-  .ticker-label { display: none; } /* hide label to give full width to text */
-  .ticker-viewport { mask-image: none; -webkit-mask-image: none; }
-  .ticker-item { font-size: 11.5px; }
+  /* Hide breaking news ticker completely on phone */
+  .ticker-bar { display: none; }
 
-  /* Cards — single column, very compact */
-  .news-grid { grid-template-columns: 1fr; gap: 10px; }
-  .card-photo { aspect-ratio: 16/7; }
-  .card-header { padding: 10px 12px 0; }
-  .card-body { padding: 8px 12px 12px; }
-  .card-title { font-size: 13px; margin-bottom: 6px; }
-  .card-excerpt { display: none; } /* hide excerpt — saves a lot of vertical space */
-  .card-date { font-size: 10.5px; }
-  .card-tg-btn { font-size: 10.5px; padding: 3px 8px; }
-
-  /* Hero */
-  .hero-title { font-size: 18px; }
+  /* Hero — bigger main title */
+  .hero-card { min-height: 260px; }
+  .hero-title { font-size: 24px; line-height: 1.2; }
   .hero-btn { width: 100%; justify-content: center; min-height: 44px; }
-  .hero-card { min-height: 240px; }
+
+  /* Cards — single column, small and compact */
+  .news-grid { grid-template-columns: 1fr; gap: 8px; }
+  .card-photo { aspect-ratio: 16/6; }
+  .card-header { padding: 8px 12px 0; }
+  .card-body { padding: 6px 12px 10px; }
+  .card-title { font-size: 12.5px; margin-bottom: 4px; }
+  .card-excerpt { display: none; }
+  .card-date { font-size: 10px; }
+  .card-tg-btn { font-size: 10px; padding: 3px 7px; }
 
   /* Bottom-sheet modal */
   .post-modal-overlay { padding: 0; align-items: flex-end; }
