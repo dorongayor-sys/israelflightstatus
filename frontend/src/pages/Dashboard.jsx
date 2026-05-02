@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import AirlineForm from '../components/AirlineForm';
 import StatusBadge from '../components/StatusBadge';
@@ -56,6 +56,15 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [syncing, setSyncing] = useState(false);
 
+  // News / ticker tab
+  const [newsPosts, setNewsPosts] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsError, setNewsError] = useState('');
+  const [editingPost, setEditingPost] = useState(null); // { id, title }
+  const [editTitle, setEditTitle] = useState('');
+  const [newsActionId, setNewsActionId] = useState(null); // id being saved/deleted
+  const editInputRef = useRef(null);
+
   const fetchAll = async () => {
     try {
       const [airlinesRes, changelogRes] = await Promise.all([
@@ -76,6 +85,57 @@ export default function Dashboard() {
   };
 
   useEffect(() => { fetchAll(); }, []);
+
+  const fetchNews = async () => {
+    setNewsLoading(true);
+    setNewsError('');
+    try {
+      const res = await api.get('/news/posts');
+      setNewsPosts(res.data || []);
+    } catch (err) {
+      setNewsError('Failed to load news posts.');
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'news') fetchNews();
+  }, [activeTab]);
+
+  const handleNewsDelete = async (id) => {
+    setNewsActionId(id);
+    setNewsError('');
+    try {
+      await api.delete(`/news/posts/${id}`);
+      setNewsPosts(prev => prev.filter(p => p.id !== id));
+    } catch {
+      setNewsError('Failed to remove post.');
+    } finally {
+      setNewsActionId(null);
+    }
+  };
+
+  const handleNewsEditSave = async () => {
+    if (!editingPost) return;
+    setNewsActionId(editingPost.id);
+    setNewsError('');
+    try {
+      await api.patch(`/news/posts/${editingPost.id}`, { title: editTitle.trim() });
+      setNewsPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, title: editTitle.trim() } : p));
+      setEditingPost(null);
+    } catch {
+      setNewsError('Failed to save title.');
+    } finally {
+      setNewsActionId(null);
+    }
+  };
+
+  const startEditPost = (post) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  };
 
   const handleAdd = async (data) => {
     setSaving(true);
@@ -183,7 +243,7 @@ export default function Dashboard() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 p-1 rounded-xl w-fit">
-          {['airlines', 'changelog'].map((tab) => (
+          {['airlines', 'news', 'changelog'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -193,7 +253,7 @@ export default function Dashboard() {
                   : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              {tab === 'airlines' ? `Airlines (${airlines.length})` : `Change Log (${changelog.length})`}
+              {tab === 'airlines' ? `Airlines (${airlines.length})` : tab === 'news' ? `News Ticker (${newsPosts.length})` : `Change Log (${changelog.length})`}
             </button>
           ))}
         </div>
@@ -307,6 +367,89 @@ export default function Dashboard() {
               </div>
             )}
           </>
+        )}
+
+        {/* News Ticker Tab */}
+        {activeTab === 'news' && (
+          <div>
+            <p className="text-slate-500 text-sm mb-4">
+              All posts below appear in the breaking news ticker and on the site. Remove a post to hide it, or edit its title to shorten the ticker text.
+            </p>
+            {newsError && (
+              <div className="mb-4 bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20 flex items-center justify-between">
+                <span>{newsError}</span>
+                <button onClick={() => setNewsError('')} className="text-red-500 hover:text-red-300 ml-3">✕</button>
+              </div>
+            )}
+            {newsLoading ? (
+              <div className="text-center py-16 text-slate-500 text-sm">Loading…</div>
+            ) : (
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                {newsPosts.length === 0 ? (
+                  <div className="text-center py-16 text-slate-500 text-sm">No posts found.</div>
+                ) : (
+                  <ul className="divide-y divide-slate-800/60">
+                    {newsPosts.map(post => (
+                      <li key={post.id} className="flex items-start gap-3 px-5 py-4 hover:bg-slate-800/30 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          {editingPost?.id === post.id ? (
+                            <div className="flex gap-2 items-center flex-wrap">
+                              <input
+                                ref={editInputRef}
+                                value={editTitle}
+                                onChange={e => setEditTitle(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleNewsEditSave(); if (e.key === 'Escape') setEditingPost(null); }}
+                                className="flex-1 min-w-0 px-3 py-1.5 bg-slate-800 border border-blue-500/50 text-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                dir="rtl"
+                              />
+                              <button
+                                onClick={handleNewsEditSave}
+                                disabled={newsActionId === post.id}
+                                className="text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingPost(null)}
+                                className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-700 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-white font-medium leading-snug" dir="rtl">{post.title}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            {post.breaking && (
+                              <span className="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded">מבזק</span>
+                            )}
+                            <span className="text-xs text-slate-500">{post.displayDate}</span>
+                          </div>
+                        </div>
+                        {editingPost?.id !== post.id && (
+                          <div className="flex gap-1 flex-shrink-0 mt-0.5">
+                            <button
+                              onClick={() => startEditPost(post)}
+                              className="text-xs text-blue-400 hover:text-blue-300 px-2.5 py-1.5 rounded-lg hover:bg-blue-500/10 transition-colors font-medium"
+                            >
+                              Edit Title
+                            </button>
+                            <button
+                              onClick={() => handleNewsDelete(post.id)}
+                              disabled={newsActionId === post.id}
+                              className="text-xs text-red-400 hover:text-red-300 px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors font-medium disabled:opacity-40"
+                            >
+                              {newsActionId === post.id ? '…' : 'Remove'}
+                            </button>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Changelog Tab */}
