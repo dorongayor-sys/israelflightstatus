@@ -39,6 +39,7 @@ router.post('/webhook', async (req, res) => {
 
     // Detect video/animation before the text check so video-only posts aren't dropped
     let hasVideo = 0;
+    let videoFileId = null;
     let photoFileId = null;
     if (message.photo && message.photo.length > 0) {
       photoFileId = message.photo[message.photo.length - 1].file_id;
@@ -46,6 +47,7 @@ router.post('/webhook', async (req, res) => {
     const videoObj = message.video || message.animation || message.video_note;
     if (videoObj) {
       hasVideo = 1;
+      videoFileId = videoObj.file_id;
       if (!photoFileId) {
         const thumb = videoObj.thumbnail || videoObj.thumb;
         if (thumb) photoFileId = thumb.file_id;
@@ -77,13 +79,13 @@ router.post('/webhook', async (req, res) => {
     const db = getDb();
     db.prepare(`
       INSERT OR REPLACE INTO news_posts
-        (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url, has_video)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url, has_video, video_file_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       message.message_id, category, title, excerpt, text,
       photoFileId, photoCredit, isoDate, isBreaking ? 1 : 0,
       `https://t.me/${CHANNEL}/${message.message_id}`,
-      hasVideo
+      hasVideo, videoFileId
     );
 
     console.log(`[NewsWebhook] Saved post ${message.message_id}: "${title}"`);
@@ -118,7 +120,8 @@ router.get('/posts', (req, res) => {
       fullText: p.full_text || null,
       telegramUrl: p.telegram_url,
       isStatusLink: p.category === 'status',
-      hasVideo: p.has_video === 1
+      hasVideo: p.has_video === 1,
+      videoFileId: p.video_file_id || null
     }));
 
     res.json(posts);
@@ -156,6 +159,47 @@ router.get('/image/:fileId', async (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=86400');
     const buf = await imgRes.arrayBuffer();
     res.send(Buffer.from(buf));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// GET /api/news/video/:fileId — stream video from Telegram
+router.get('/video/:fileId', async (req, res) => {
+  try {
+    const fileId = decodeURIComponent(req.params.fileId);
+    if (!BOT_TOKEN) return res.status(503).send('Bot token not configured');
+
+    const fileRes = await fetch(
+      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
+    );
+    const fileData = await fileRes.json();
+    if (!fileData.ok || !fileData.result?.file_path) {
+      return res.status(404).send('File not found');
+    }
+
+    const telegramUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileData.result.file_path}`;
+
+    // Forward range header so the browser can seek
+    const fetchHeaders = {};
+    if (req.headers.range) fetchHeaders['Range'] = req.headers.range;
+
+    const videoRes = await fetch(telegramUrl, { headers: fetchHeaders });
+    if (!videoRes.ok && videoRes.status !== 206) {
+      return res.status(videoRes.status).send('Video not found');
+    }
+
+    res.status(videoRes.status);
+    res.setHeader('Content-Type', videoRes.headers.get('content-type') || 'video/mp4');
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    if (videoRes.headers.get('content-length'))
+      res.setHeader('Content-Length', videoRes.headers.get('content-length'));
+    if (videoRes.headers.get('content-range'))
+      res.setHeader('Content-Range', videoRes.headers.get('content-range'));
+
+    const { Readable } = require('stream');
+    Readable.fromWeb(videoRes.body).pipe(res);
   } catch (err) {
     res.status(500).send(err.message);
   }

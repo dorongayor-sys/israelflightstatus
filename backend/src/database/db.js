@@ -191,6 +191,7 @@ async function initDb() {
       hidden INTEGER NOT NULL DEFAULT 0,
       telegram_url TEXT,
       has_video INTEGER NOT NULL DEFAULT 0,
+      video_file_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -201,6 +202,8 @@ async function initDb() {
   try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0'); } catch {}
   // Migrate: add has_video column to news_posts if missing
   try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN has_video INTEGER NOT NULL DEFAULT 0'); } catch {}
+  // Migrate: add video_file_id column to news_posts if missing
+  try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN video_file_id TEXT'); } catch {}
 
   // Migrate: add sync_locked if missing
   try { sqlDb.exec('ALTER TABLE airlines ADD COLUMN sync_locked INTEGER NOT NULL DEFAULT 0'); } catch {}
