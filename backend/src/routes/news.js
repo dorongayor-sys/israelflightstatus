@@ -19,7 +19,8 @@ function detectCategory(text) {
 }
 
 function formatHebrewDate(isoDate) {
-  const d = new Date(isoDate + 'T12:00:00Z');
+  const datePart = isoDate.split('T')[0];
+  const d = new Date(datePart + 'T12:00:00Z');
   return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
@@ -58,7 +59,7 @@ router.post('/webhook', async (req, res) => {
     if (!text && !hasVideo && !photoFileId) return res.json({ ok: true });
 
     const date = new Date(message.date * 1000);
-    const isoDate = date.toISOString().split('T')[0];
+    const isoDate = date.toISOString(); // full UTC datetime for accurate "X hours ago"
 
     // Extract credit from last line if it starts with צילום/קרדיט/photo
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
