@@ -4,9 +4,10 @@
 
 # Admin panel — serve directly
 [[redirects]]
-  from = "/admin"
-  to = "/admin.html"
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
   status = 200
+  force = true
 
 # Airline tracker — SPA fallback (must come before the catch-all)
 [[redirects]]
