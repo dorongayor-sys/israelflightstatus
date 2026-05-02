@@ -190,6 +190,7 @@ async function initDb() {
       is_featured INTEGER NOT NULL DEFAULT 0,
       hidden INTEGER NOT NULL DEFAULT 0,
       telegram_url TEXT,
+      has_video INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
