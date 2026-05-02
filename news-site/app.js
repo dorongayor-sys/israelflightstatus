@@ -125,7 +125,7 @@ function renderCard(post) {
       <img src="${CONFIG.backendUrl}/api/news/image/${encodeURIComponent(post.photoFileId)}" alt="${escape(post.title)}" loading="lazy" />
       ${post.hasVideo ? '<span class="card-video-badge">▶ סרטון</span>' : ''}
       ${post.photoCredit ? `<span class="card-photo-credit">📷 ${escape(post.photoCredit)}</span>` : ''}
-    </div>` : '';
+    </div>` : `<div class="card-no-photo">✈</div>`;
 
   return `
     <article class="news-card" data-category="${escape(post.category)}" role="listitem" onclick="openPostModal(${post.id})">
