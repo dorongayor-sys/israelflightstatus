@@ -198,6 +198,8 @@ async function initDb() {
   try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0'); } catch {}
   // Migrate: add is_featured column to news_posts if missing
   try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0'); } catch {}
+  // Migrate: add has_video column to news_posts if missing
+  try { sqlDb.exec('ALTER TABLE news_posts ADD COLUMN has_video INTEGER NOT NULL DEFAULT 0'); } catch {}
 
   // Migrate: add sync_locked if missing
   try { sqlDb.exec('ALTER TABLE airlines ADD COLUMN sync_locked INTEGER NOT NULL DEFAULT 0'); } catch {}

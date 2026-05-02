@@ -47,6 +47,18 @@ router.post('/webhook', async (req, res) => {
       photoFileId = message.photo[message.photo.length - 1].file_id;
     }
 
+    // Video detection (video, GIF animation, round video note)
+    let hasVideo = 0;
+    const videoObj = message.video || message.animation || message.video_note;
+    if (videoObj) {
+      hasVideo = 1;
+      // Use video thumbnail as cover image if no photo attached
+      if (!photoFileId) {
+        const thumb = videoObj.thumbnail || videoObj.thumb;
+        if (thumb) photoFileId = thumb.file_id;
+      }
+    }
+
     // Extract credit from last line if it starts with צילום/קרדיט/photo
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     let photoCredit = null;
@@ -64,12 +76,13 @@ router.post('/webhook', async (req, res) => {
     const db = getDb();
     db.prepare(`
       INSERT OR REPLACE INTO news_posts
-        (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url, has_video)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       message.message_id, category, title, excerpt, text,
       photoFileId, photoCredit, isoDate, isBreaking ? 1 : 0,
-      `https://t.me/${CHANNEL}/${message.message_id}`
+      `https://t.me/${CHANNEL}/${message.message_id}`,
+      hasVideo
     );
 
     console.log(`[NewsWebhook] Saved post ${message.message_id}: "${title}"`);
@@ -103,7 +116,8 @@ router.get('/posts', (req, res) => {
       photoCredit: p.photo_credit || null,
       fullText: p.full_text || null,
       telegramUrl: p.telegram_url,
-      isStatusLink: p.category === 'status'
+      isStatusLink: p.category === 'status',
+      hasVideo: p.has_video === 1
     }));
 
     res.json(posts);

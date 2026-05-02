@@ -123,6 +123,7 @@ function renderCard(post) {
   const photoHtml = post.photoFileId ? `
     <div class="card-photo">
       <img src="${CONFIG.backendUrl}/api/news/image/${encodeURIComponent(post.photoFileId)}" alt="${escape(post.title)}" loading="lazy" />
+      ${post.hasVideo ? '<span class="card-video-badge">▶ סרטון</span>' : ''}
       ${post.photoCredit ? `<span class="card-photo-credit">📷 ${escape(post.photoCredit)}</span>` : ''}
     </div>` : '';
 
@@ -180,6 +181,14 @@ function openPostModal(id) {
     creditEl.style.display = 'block';
   } else {
     creditEl.style.display = 'none';
+  }
+
+  const videoBtnEl = document.getElementById('modalVideoBtn');
+  if (post.hasVideo && post.telegramUrl) {
+    videoBtnEl.href = post.telegramUrl;
+    videoBtnEl.style.display = 'inline-flex';
+  } else {
+    videoBtnEl.style.display = 'none';
   }
 
   const modal = document.getElementById('postModal');
