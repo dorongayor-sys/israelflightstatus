@@ -266,6 +266,18 @@ async function applyOverrides(db) {
 // Called on startup from app.js
 router.applyOverrides = applyOverrides;
 
+// POST /api/news/posts/restore-all — unhide all soft-deleted posts
+router.post('/posts/restore-all', requireAuth, async (req, res) => {
+  try {
+    getDb().prepare('UPDATE news_posts SET hidden = 0').run();
+    const o = await loadOverrides();
+    o.hidden = [];
+    _overridesCache = o;
+    await saveOverrides(o);
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // DELETE /api/news/posts/:id — soft delete
 router.delete('/posts/:id', requireAuth, async (req, res) => {
   try {

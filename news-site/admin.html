@@ -142,6 +142,7 @@
     <h1>✈ ניהול עדכוני תעופה</h1>
     <div class="top-bar-actions">
       <span id="welcomeMsg" style="color:#64748b;font-size:.85rem;"></span>
+      <button class="btn-sm" style="background:#166534;color:#6ee7b7;font-weight:700;" onclick="restoreAll()">♻️ שחזר הכל</button>
       <button class="btn-sm btn-logout" onclick="logout()">התנתק</button>
     </div>
   </div>
@@ -412,6 +413,14 @@ async function saveEdit() {
     body: JSON.stringify({ title, excerpt, photo_credit })
   });
   if (r.ok) { closeModal(); await loadPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+/* ── Restore all hidden posts ── */
+async function restoreAll() {
+  if (!confirm('לשחזר את כל הפוסטים שנמחקו?')) return;
+  const r = await fetch(`${API}/api/news/posts/restore-all`, { method: 'POST', headers: authHeader() });
+  if (r.ok) { alert('כל הפוסטים שוחזרו!'); await loadPosts(); }
   else { const d = await r.json(); alert(d.error || 'שגיאה'); }
 }
 
