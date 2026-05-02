@@ -6,7 +6,7 @@
    ============================================================ */
 
 const CONFIG = {
-  airlineStatusUrl: '/tracker/', // airline status tracker
+  airlineStatusUrl: 'tracker/', // airline status tracker
   telegramUrl: 'https://t.me/AviationupdatesDG',
   backendUrl: 'https://israelflightstatus.onrender.com'
 };
