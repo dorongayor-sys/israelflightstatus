@@ -219,9 +219,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
    BREAKING NEWS TICKER
    ============================================================ */
 .ticker-bar {
-  background: var(--blue-d);
-  padding: 9px 0;
-  overflow: hidden;
+  display: none;
 }
 .ticker-bar .container {
   display: flex;
@@ -853,9 +851,6 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .container { padding: 0 12px; }
   .top-bar .container { justify-content: center; }
   .top-date { display: none; }
-
-  /* Hide breaking news ticker completely on phone */
-  .ticker-bar { display: none; }
 
   /* Hero — smaller main title on phone */
   .hero-card { min-height: 260px; }

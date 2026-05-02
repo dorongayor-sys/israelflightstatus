@@ -36,40 +36,41 @@ router.post('/webhook', async (req, res) => {
     if (!message) return res.json({ ok: true });
 
     const text = (message.caption || message.text || '').replace(/https?:\/\/t\.me\/\S+/g, '').trim();
-    if (!text) return res.json({ ok: true });
 
-    const date = new Date(message.date * 1000);
-    const isoDate = date.toISOString().split('T')[0];
-
-    // Largest photo
+    // Detect video/animation before the text check so video-only posts aren't dropped
+    let hasVideo = 0;
     let photoFileId = null;
     if (message.photo && message.photo.length > 0) {
       photoFileId = message.photo[message.photo.length - 1].file_id;
     }
-
-    // Video detection (video, GIF animation, round video note)
-    let hasVideo = 0;
     const videoObj = message.video || message.animation || message.video_note;
     if (videoObj) {
       hasVideo = 1;
-      // Use video thumbnail as cover image if no photo attached
       if (!photoFileId) {
         const thumb = videoObj.thumbnail || videoObj.thumb;
         if (thumb) photoFileId = thumb.file_id;
       }
     }
 
+    // Skip only if no text AND no media
+    if (!text && !hasVideo && !photoFileId) return res.json({ ok: true });
+
+    const date = new Date(message.date * 1000);
+    const isoDate = date.toISOString().split('T')[0];
+
     // Extract credit from last line if it starts with צילום/קרדיט/photo
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     let photoCredit = null;
-    const creditLine = lines[lines.length - 1];
-    if (/^(צילום|קרדיט|photo credit|📷)/i.test(creditLine)) {
-      photoCredit = creditLine.replace(/^(צילום|קרדיט|photo credit|📷)[:\s]*/i, '').trim();
-      lines.pop();
+    if (lines.length) {
+      const creditLine = lines[lines.length - 1];
+      if (/^(צילום|קרדיט|photo credit|📷)/i.test(creditLine)) {
+        photoCredit = creditLine.replace(/^(צילום|קרדיט|photo credit|📷)[:\s]*/i, '').trim();
+        lines.pop();
+      }
     }
 
-    const title = cleanTitle(lines[0] || text.substring(0, 120));
-    const excerpt = lines.slice(1).join(' ').substring(0, 300) || title;
+    const title = text ? cleanTitle(lines[0] || text.substring(0, 120)) : (hasVideo ? 'סרטון' : 'עדכון');
+    const excerpt = text ? (lines.slice(1).join(' ').substring(0, 300) || title) : title;
     const category = detectCategory(text);
     const isBreaking = /🚨|מבזק/.test(text);
 
