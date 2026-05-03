@@ -163,10 +163,9 @@ export default function PublicView() {
 
         {/* Stats */}
         {!loading && (
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            <StatCard count={counts.flying}     label="Flying"      color="green" tooltip={STATUS_TOOLTIPS.flying}     tooltipAlign="right" />
-            <StatCard count={counts.not_flying} label="Not Flying"  color="red"   tooltip={STATUS_TOOLTIPS.not_flying} tooltipAlign="center" />
-            <StatCard count={counts.partial}    label="Limited"     color="amber" tooltip={STATUS_TOOLTIPS.partial}    tooltipAlign="left" />
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <StatCard count={counts.flying}     label="Flying"     color="green" tooltip={STATUS_TOOLTIPS.flying}     tooltipAlign="right" />
+            <StatCard count={counts.not_flying} label="Not Flying" color="red"   tooltip={STATUS_TOOLTIPS.not_flying} tooltipAlign="left" />
           </div>
         )}
 
