@@ -103,6 +103,16 @@ export default function Dashboard() {
     if (activeTab === 'news') fetchNews();
   }, [activeTab]);
 
+  const handleRestoreAll = async () => {
+    setNewsError('');
+    try {
+      await api.post('/news/posts/restore-all');
+      await fetchNews();
+    } catch {
+      setNewsError('Failed to restore posts.');
+    }
+  };
+
   const handleNewsDelete = async (id) => {
     setNewsActionId(id);
     setNewsError('');
@@ -372,9 +382,17 @@ export default function Dashboard() {
         {/* News Ticker Tab */}
         {activeTab === 'news' && (
           <div>
-            <p className="text-slate-500 text-sm mb-4">
-              All posts below appear in the breaking news ticker and on the site. Remove a post to hide it, or edit its title to shorten the ticker text.
-            </p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-slate-500 text-sm">
+                All posts below appear in the breaking news ticker and on the site. Remove a post to hide it, or edit its title to shorten the ticker text.
+              </p>
+              <button
+                onClick={handleRestoreAll}
+                className="ml-4 flex-shrink-0 text-xs text-green-400 hover:text-green-300 px-3 py-1.5 rounded-lg hover:bg-green-500/10 border border-green-500/20 transition-colors font-medium"
+              >
+                Restore All
+              </button>
+            </div>
             {newsError && (
               <div className="mb-4 bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20 flex items-center justify-between">
                 <span>{newsError}</span>

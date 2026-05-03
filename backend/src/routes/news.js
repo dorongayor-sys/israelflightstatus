@@ -102,9 +102,20 @@ router.get('/posts', (req, res) => {
   try {
     const db = getDb();
     // Pinned featured post first, then rest by date
-    const rows = db.prepare(
-      "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-4 days') ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 50"
-    ).all();
+    // Admin mode (requires auth header) shows all posts without date restriction
+    const isAdmin = (() => {
+      try {
+        const jwt = require('jsonwebtoken');
+        const h = req.headers.authorization;
+        if (!h || !h.startsWith('Bearer ')) return false;
+        jwt.verify(h.split(' ')[1], process.env.JWT_SECRET);
+        return true;
+      } catch { return false; }
+    })();
+    const query = isAdmin
+      ? "SELECT * FROM news_posts WHERE hidden = 0 ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 200"
+      : "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-4 days') ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 50";
+    const rows = db.prepare(query).all();
 
     const hasPinned = rows.some(p => p.is_featured === 1);
     const posts = rows.map((p, i) => ({
@@ -209,48 +220,27 @@ router.get('/video/:fileId', async (req, res) => {
 // ── Admin routes (require JWT) ────────────────────────────────────────────
 const { requireAuth } = require('../middleware/auth');
 
-const RENDER_API_KEY = process.env.RENDER_API_KEY;
-const RENDER_SERVICE_ID = process.env.RENDER_SERVICE_ID;
-const RENDER_API = 'https://api.render.com/v1';
-
-// In-memory cache so we don't hit the API on every request
+// In-memory cache
 let _overridesCache = null;
 
-async function loadOverrides() {
+function loadOverrides() {
   if (_overridesCache) return _overridesCache;
   try {
-    const r = await fetch(`${RENDER_API}/services/${RENDER_SERVICE_ID}/env-vars`, {
-      headers: { 'Authorization': `Bearer ${RENDER_API_KEY}` }
-    });
-    const vars = await r.json();
-    const found = vars.find(v => v.envVar.key === 'NEWS_OVERRIDES');
-    _overridesCache = found ? JSON.parse(found.envVar.value) : { hidden: [], breaking: [], featured: null, edits: {} };
+    const row = getDb().prepare("SELECT value FROM sync_meta WHERE key = 'NEWS_OVERRIDES'").get();
+    _overridesCache = row ? JSON.parse(row.value) : { hidden: [], breaking: [], featured: null, edits: {} };
   } catch { _overridesCache = { hidden: [], breaking: [], featured: null, edits: {} }; }
   return _overridesCache;
 }
 
-async function saveOverrides(overrides) {
+function saveOverrides(overrides) {
   _overridesCache = overrides;
   try {
-    // Fetch all current env vars, replace NEWS_OVERRIDES, PUT back
-    const r = await fetch(`${RENDER_API}/services/${RENDER_SERVICE_ID}/env-vars`, {
-      headers: { 'Authorization': `Bearer ${RENDER_API_KEY}` }
-    });
-    const vars = await r.json();
-    const all = vars.map(v => ({ key: v.envVar.key, value: v.envVar.value }));
-    const idx = all.findIndex(v => v.key === 'NEWS_OVERRIDES');
-    const val = JSON.stringify(overrides);
-    if (idx >= 0) all[idx].value = val; else all.push({ key: 'NEWS_OVERRIDES', value: val });
-    await fetch(`${RENDER_API}/services/${RENDER_SERVICE_ID}/env-vars`, {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${RENDER_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(all)
-    });
-  } catch (e) { console.error('[Overrides] Render save failed:', e.message); }
+    getDb().prepare("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('NEWS_OVERRIDES', ?)").run(JSON.stringify(overrides));
+  } catch (e) { console.error('[Overrides] DB save failed:', e.message); }
 }
 
-async function applyOverrides(db) {
-  const o = await loadOverrides();
+function applyOverrides(db) {
+  const o = loadOverrides();
   for (const id of (o.hidden  || [])) db.prepare('UPDATE news_posts SET hidden = 1 WHERE message_id = ?').run(id);
   for (const id of (o.breaking|| [])) db.prepare('UPDATE news_posts SET is_breaking = 1 WHERE message_id = ?').run(id);
   if (o.featured) db.prepare('UPDATE news_posts SET is_featured = 1 WHERE message_id = ?').run(o.featured);
@@ -268,26 +258,25 @@ async function applyOverrides(db) {
 router.applyOverrides = applyOverrides;
 
 // POST /api/news/posts/restore-all — unhide all soft-deleted posts
-router.post('/posts/restore-all', requireAuth, async (req, res) => {
+router.post('/posts/restore-all', requireAuth, (req, res) => {
   try {
     getDb().prepare('UPDATE news_posts SET hidden = 0').run();
-    const o = await loadOverrides();
+    const o = loadOverrides();
     o.hidden = [];
-    _overridesCache = o;
-    await saveOverrides(o);
+    saveOverrides(o);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // DELETE /api/news/posts/:id — soft delete
-router.delete('/posts/:id', requireAuth, async (req, res) => {
+router.delete('/posts/:id', requireAuth, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     getDb().prepare('UPDATE news_posts SET hidden = 1 WHERE message_id = ?').run(id);
-    const o = await loadOverrides();
+    const o = loadOverrides();
     if (!o.hidden.includes(id)) { o.hidden.push(id); o.breaking = (o.breaking||[]).filter(x => x !== id); }
     if (o.featured === id) o.featured = null;
-    saveOverrides(o); // async, don't await — respond fast
+    saveOverrides(o);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -310,7 +299,7 @@ router.patch('/posts/:id', requireAuth, async (req, res) => {
     vals.push(id);
     db.prepare(`UPDATE news_posts SET ${fields.join(', ')} WHERE message_id = ?`).run(...vals);
 
-    const o = await loadOverrides();
+    const o = loadOverrides();
     if (is_breaking !== undefined) {
       if (is_breaking) { if (!(o.breaking||[]).includes(id)) (o.breaking = o.breaking||[]).push(id); }
       else             { o.breaking = (o.breaking||[]).filter(x => x !== id); }
