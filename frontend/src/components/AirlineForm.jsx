@@ -88,11 +88,10 @@ export default function AirlineForm({ initial = null, onSubmit, onCancel, loadin
         <label className={labelClass}>
           Status <span className="text-red-400">*</span>
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'flying',     label: 'Flying',     active: 'border-green-500 text-green-400 bg-green-500/10' },
             { value: 'not_flying', label: 'Not Flying', active: 'border-red-500 text-red-400 bg-red-500/10' },
-            { value: 'partial',    label: 'Limited',    active: 'border-amber-500 text-amber-400 bg-amber-500/10' },
           ].map(({ value, label, active }) => (
             <button
               key={value}
@@ -189,20 +188,6 @@ export default function AirlineForm({ initial = null, onSubmit, onCancel, loadin
           className={inputClass}
         />
       </div>
-
-      {/* Sync lock */}
-      <label className="flex items-center justify-between gap-3 bg-slate-800/60 border border-slate-700 rounded-lg px-4 py-3 cursor-pointer hover:bg-slate-800 transition-colors">
-        <div>
-          <p className="text-sm font-medium text-slate-300">Lock from auto-sync</p>
-          <p className="text-xs text-slate-500 mt-0.5">Keep this ON to protect your changes from being overwritten by auto-sync</p>
-        </div>
-        <div
-          onClick={() => setForm((prev) => ({ ...prev, sync_locked: !prev.sync_locked }))}
-          className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${form.sync_locked ? 'bg-amber-500' : 'bg-slate-700'}`}
-        >
-          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.sync_locked ? 'translate-x-5' : 'translate-x-1'}`} />
-        </div>
-      </label>
 
       {/* Buttons */}
       <div className="flex gap-3 pt-1">

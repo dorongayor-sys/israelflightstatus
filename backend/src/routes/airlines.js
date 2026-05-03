@@ -7,7 +7,15 @@ const router = express.Router();
 
 function parseAirline(a) {
   if (!a) return a;
-  return { ...a, destinations: JSON.parse(a.destinations || '[]'), is_israeli: !!a.is_israeli, end_date_unconfirmed: !!a.end_date_unconfirmed };
+  const parsed = { ...a, destinations: JSON.parse(a.destinations || '[]'), is_israeli: !!a.is_israeli, end_date_unconfirmed: !!a.end_date_unconfirmed };
+  // If cancellation end date is today or in the past, treat as flying again
+  if (parsed.status === 'not_flying' && parsed.cancellation_end_date) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (parsed.cancellation_end_date <= today) {
+      parsed.status = 'flying';
+    }
+  }
+  return parsed;
 }
 
 function logChange(db, airlineId, airlineName, action, fieldChanged, oldValue, newValue) {
