@@ -23,15 +23,27 @@ function detectCategory(text) {
 async function runNewsChannelSync() {
   try {
     console.log('[NewsSync] Fetching channel page...');
-    const res = await fetch(`https://t.me/s/${NEWS_CHANNEL}`);
+    const res = await fetch(`https://t.me/s/${NEWS_CHANNEL}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'he,en;q=0.9',
+      }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
 
-    // Split into per-message blocks using <div class="tgme_widget_message ..."> as delimiter
-    const blockRe = /<div class="tgme_widget_message [^"]*"[^>]*data-post="[^/]+\/(\d+)"[\s\S]*?(?=<div class="tgme_widget_message [^"]*"[^>]*data-post="|$)/g;
-    const textRe = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/;
-    const photoRe = /tgme_widget_message_photo_wrap[^>]+style="[^"]*url\('([^']+)'\)/;
-    const dateRe = /datetime="([^"]+)"/;
+    console.log(`[NewsSync] Got ${html.length} bytes of HTML`);
+
+    // Extract message IDs from data-post attribute (very reliable)
+    const messageIds = [];
+    const idRe = /data-post="[^"\/]+\/(\d+)"/g;
+    let idMatch;
+    while ((idMatch = idRe.exec(html)) !== null) {
+      const id = parseInt(idMatch[1], 10);
+      if (!messageIds.includes(id)) messageIds.push(id);
+    }
+    console.log(`[NewsSync] Found ${messageIds.length} message IDs`);
 
     function cleanHtml(raw) {
       return raw
@@ -45,23 +57,64 @@ async function runNewsChannelSync() {
         .trim();
     }
 
+    // Split HTML into per-message blocks by data-post attribute
+    const blocks = html.split(/(?=<div[^>]+data-post=")/);
+
     const db = getDb();
     let saved = 0;
-    let m;
 
-    while ((m = blockRe.exec(html)) !== null) {
-      const messageId = parseInt(m[1], 10);
-      const block = m[0];
+    for (const block of blocks) {
+      // Extract message ID
+      const idMatch = /data-post="[^"\/]+\/(\d+)"/.exec(block);
+      if (!idMatch) continue;
+      const messageId = parseInt(idMatch[1], 10);
 
-      const dateMatch = dateRe.exec(block);
-      const isoDate = dateMatch ? dateMatch[1].split('T')[0] : new Date().toISOString().split('T')[0];
+      // Skip already saved posts
+      const existing = db.prepare('SELECT id FROM news_posts WHERE message_id = ?').get(messageId);
+      if (existing) continue;
 
-      const textMatch = textRe.exec(block);
-      const rawText = textMatch ? cleanHtml(textMatch[1]) : '';
+      // Extract date — try multiple patterns
+      let isoDate = new Date().toISOString();
+      const datePatterns = [
+        /datetime="([^"]+)"/,
+        /data-time="(\d+)"/,
+      ];
+      for (const pat of datePatterns) {
+        const dm = pat.exec(block);
+        if (dm) {
+          // Could be ISO string or unix timestamp
+          const val = dm[1];
+          isoDate = /^\d+$/.test(val)
+            ? new Date(parseInt(val, 10) * 1000).toISOString()
+            : val;
+          break;
+        }
+      }
+
+      // Extract text — try multiple class name patterns Telegram has used
+      let rawText = '';
+      const textPatterns = [
+        /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/,
+        /class="js-message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/,
+        /class="message_media_not_supported_wrap[^"]*"[^>]*>([\s\S]*?)<\/div>/,
+      ];
+      for (const pat of textPatterns) {
+        const tm = pat.exec(block);
+        if (tm) { rawText = cleanHtml(tm[1]); break; }
+      }
       if (!rawText) continue;
 
-      const photoMatch = photoRe.exec(block);
-      const photoUrl = photoMatch ? photoMatch[1] : null;
+      // Extract photo URL — try multiple patterns
+      let photoUrl = null;
+      const photoPatterns = [
+        /tgme_widget_message_photo_wrap[^>]+style="[^"]*url\('([^']+)'\)/,
+        /tgme_widget_message_photo[^>]+style="[^"]*url\('([^']+)'\)/,
+        /<img[^>]+class="[^"]*tgme[^"]*"[^>]+src="([^"]+)"/,
+      ];
+      for (const pat of photoPatterns) {
+        const pm = pat.exec(block);
+        if (pm) { photoUrl = pm[1]; break; }
+      }
 
       const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
       let photoCredit = null;
@@ -75,9 +128,6 @@ async function runNewsChannelSync() {
       const excerpt = lines.slice(1).join(' ').substring(0, 300) || title;
       const category = detectCategory(rawText);
       const isBreaking = /🚨|מבזק/.test(rawText) ? 1 : 0;
-
-      const existing = db.prepare('SELECT id FROM news_posts WHERE message_id = ?').get(messageId);
-      if (existing) continue;
 
       db.prepare(`
         INSERT OR IGNORE INTO news_posts
