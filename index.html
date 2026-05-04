@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>עדכוני תעופה - האתר הרשמי</title>
+  <meta name="description" content="מודיעין תעופה בזמן אמת על ישראל והאזור. תעופה צבאית, טיסות אזרחיות, פעילות נמל תעופה וחדשות שוברות.">
+  <meta name="google-site-verification" content="eoxj2HS2dsoij3GSSZyhJOWN4MZEZH8y_CZne7bbZOw" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="container">
+      <span id="todayDate" class="top-date"></span>
+      <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener" class="tg-follow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.196 14.26l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.007.131.625.326z"/>
+        </svg>
+        עקוב בטלגרם
+      </a>
+    </div>
+  </div>
+
+  <!-- Brand Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">✈</div>
+        <div class="brand-text">
+          <div class="brand-name">עדכוני תעופה - האתר הרשמי</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="site-nav" role="navigation" aria-label="ניווט ראשי">
+    <div class="container">
+      <div class="nav-inner">
+        <div class="nav-filters" role="tablist"></div>
+        <a class="status-nav-link" id="statusNavLink" href="#" target="_blank" rel="noopener">
+          <span class="live-dot" aria-hidden="true"></span>
+          מעקב סטטוס חברות תעופה זרות
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Breaking News Ticker -->
+  <div class="ticker-bar" aria-label="טיקר חדשות שוברות" aria-live="polite">
+    <div class="container">
+      <span class="ticker-label" aria-hidden="true">מבזקים</span>
+      <div class="ticker-viewport" aria-hidden="true">
+        <div class="ticker-track" id="tickerTrack"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="site-main">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="hero-section" id="heroSection" aria-label="כתבה ראשית"></section>
+
+      <!-- Section Header -->
+      <div class="section-header">
+        <h2 class="section-title" id="sectionTitle">עדכונים אחרונים</h2>
+        <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener" class="see-all">
+          ← כל העדכונים בטלגרם
+        </a>
+      </div>
+
+      <!-- News Grid -->
+      <div class="news-grid" id="newsGrid" role="list"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display:none" aria-live="polite">
+        <p>אין פוסטים בקטגוריה זו עדיין.</p>
+      </div>
+
+      <!-- Airline Status CTA -->
+      <div class="status-cta">
+        <div class="status-cta-content">
+          <div class="status-cta-icon" aria-hidden="true">✈</div>
+          <div class="status-cta-text">
+            <h3>מעקב סטטוס חברות זרות בנתב"ג</h3>
+          </div>
+        </div>
+        <a href="#" id="statusCtaBtn" target="_blank" rel="noopener" class="status-cta-btn">
+          פתח
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Post detail modal -->
+  <div id="postModal" class="post-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display:none;" onclick="closePostModal(event)">
+    <div class="post-modal">
+      <button class="post-modal-close" onclick="closePostModal()" aria-label="סגור">✕</button>
+      <div id="modalImg" class="post-modal-img" style="display:none;"></div>
+      <div id="modalVideo" class="post-modal-video" style="display:none;">
+        <video id="modalVideoPlayer" controls playsinline preload="metadata"></video>
+      </div>
+      <div class="post-modal-body">
+        <div id="modalBadges" class="post-modal-badges"></div>
+        <h2 id="modalTitle" class="post-modal-title"></h2>
+        <p id="modalDate" class="post-modal-date"></p>
+        <div id="modalText" class="post-modal-text"></div>
+        <p id="modalCredit" class="post-modal-credit" style="display:none;"></p>
+        <a id="modalVideoBtn" class="modal-video-btn" href="#" target="_blank" rel="noopener" style="display:none;">
+          פתח בטלגרם
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-about">
+          <div class="footer-logo">✈ עדכוני תעופה</div>
+          <p>מודיעין תעופה בזמן אמת על ישראל והאזור הרחב. תעופה צבאית, טיסות אזרחיות, פעילות נמל תעופה וחדשות שוברות — הכל במקום אחד.</p>
+          <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener" class="footer-tg-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.196 14.26l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.007.131.625.326z"/>
+            </svg>
+            הצטרף לערוץ טלגרם
+          </a>
+        </div>
+
+        <div class="footer-links">
+          <h4>גישה מהירה</h4>
+          <ul>
+            <li><a href="#" onclick="window.scrollTo(0,0);return false;">פיד חדשות</a></li>
+            <li><a href="#" id="footerStatusLink" target="_blank" rel="noopener">מעקב סטטוס חברות תעופה זרות</a></li>
+            <li><a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener">ערוץ טלגרם</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h4>קטגוריות</h4>
+          <ul>
+            <li><a href="#" onclick="filterByCategory('civil');return false;">תעופה אזרחית</a></li>
+            <li><a href="#" onclick="filterByCategory('military');return false;">תעופה צבאית</a></li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 עדכוני תעופה &nbsp;·&nbsp; אינו קשור לשום רשות תעופה רשמית &nbsp;·&nbsp;
+          <a href="https://t.me/AviationupdatesDG" target="_blank" rel="noopener">@AviationupdatesDG</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
