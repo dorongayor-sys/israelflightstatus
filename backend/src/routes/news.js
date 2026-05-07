@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const { getDb } = require('../database/db');
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -114,7 +116,7 @@ router.get('/posts', (req, res) => {
     })();
     const query = isAdmin
       ? "SELECT * FROM news_posts WHERE hidden = 0 ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 200"
-      : "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-4 days') ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 50";
+      : "SELECT * FROM news_posts WHERE hidden = 0 AND post_date >= date('now', '-30 days') ORDER BY is_featured DESC, post_date DESC, message_id DESC LIMIT 50";
     const rows = db.prepare(query).all();
 
     const hasPinned = rows.some(p => p.is_featured === 1);
@@ -142,7 +144,10 @@ router.get('/posts', (req, res) => {
   }
 });
 
-// GET /api/news/image/:fileId — proxy from Telegram or redirect CDN URL
+// GET /api/news/image/:fileId — proxy from Telegram with disk cache
+const IMAGE_CACHE_DIR = path.join(__dirname, '../../data/image-cache');
+fs.mkdirSync(IMAGE_CACHE_DIR, { recursive: true });
+
 router.get('/image/:fileId', async (req, res) => {
   try {
     const fileId = decodeURIComponent(req.params.fileId);
@@ -154,6 +159,21 @@ router.get('/image/:fileId', async (req, res) => {
 
     if (!BOT_TOKEN) return res.status(503).send('Bot token not configured');
 
+    // Check disk cache first — survives Render restarts if disk is mounted
+    const safeId = fileId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const cachedJpg = path.join(IMAGE_CACHE_DIR, `${safeId}.jpg`);
+    const cachedPng = path.join(IMAGE_CACHE_DIR, `${safeId}.png`);
+    const cachedWebp = path.join(IMAGE_CACHE_DIR, `${safeId}.webp`);
+
+    for (const [cachedPath, mime] of [[cachedJpg, 'image/jpeg'], [cachedPng, 'image/png'], [cachedWebp, 'image/webp']]) {
+      if (fs.existsSync(cachedPath)) {
+        res.setHeader('Content-Type', mime);
+        res.setHeader('Cache-Control', 'public, max-age=604800');
+        return res.send(fs.readFileSync(cachedPath));
+      }
+    }
+
+    // Fetch from Telegram
     const fileRes = await fetch(
       `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
     );
@@ -167,10 +187,17 @@ router.get('/image/:fileId', async (req, res) => {
     );
     if (!imgRes.ok) return res.status(404).send('Image not found');
 
-    res.setHeader('Content-Type', imgRes.headers.get('content-type') || 'image/jpeg');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    const buf = await imgRes.arrayBuffer();
-    res.send(Buffer.from(buf));
+    const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+    const buf = Buffer.from(await imgRes.arrayBuffer());
+
+    // Save to disk cache
+    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+    const savePath = path.join(IMAGE_CACHE_DIR, `${safeId}.${ext}`);
+    try { fs.writeFileSync(savePath, buf); } catch (e) { /* non-fatal */ }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.send(buf);
   } catch (err) {
     res.status(500).send(err.message);
   }
