@@ -2,7 +2,7 @@ const { getDb } = require('./database/db');
 
 const MAKO_INTERVAL_MS = 15 * 60 * 1000; // every 15 minutes
 const TELEGRAM_INTERVAL_MS = 15 * 60 * 1000; // every 15 minutes
-const NEWS_SYNC_INTERVAL_MS = 10 * 60 * 1000; // every 10 minutes
+const NEWS_SYNC_INTERVAL_MS = 1 * 60 * 1000; // every 1 minute
 
 // ── News channel scraper (AviationupdatesDG) ──────────────────────────────
 
@@ -21,130 +21,118 @@ function detectCategory(text) {
 }
 
 async function runNewsChannelSync() {
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const CHANNEL_ID = process.env.TELEGRAM_NEWS_CHANNEL_ID; // numeric chat ID e.g. -1001234567890
+
+  // ── Strategy 1: Bot API (reliable, needs bot token + channel ID) ──────────
+  if (BOT_TOKEN && CHANNEL_ID) {
+    await runNewsChannelSyncBotApi(BOT_TOKEN, CHANNEL_ID);
+    return;
+  }
+
+  // ── Strategy 2: Webhook-only (posts arrive via /api/news/webhook) ─────────
+  // If no bot token or channel ID, posts come in through the Telegram webhook.
+  // Nothing to do here — just log and re-apply overrides.
+  console.log('[NewsSync] No BOT_TOKEN+CHANNEL_ID — relying on webhook for new posts');
   try {
-    console.log('[NewsSync] Fetching channel page...');
-    const res = await fetch(`https://t.me/s/${NEWS_CHANNEL}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'he,en;q=0.9',
-      }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
+    const { applyOverrides } = require('./routes/news');
+    await applyOverrides(getDb());
+  } catch (err) {
+    console.error(`[NewsSync] applyOverrides error: ${err.message}`);
+  }
+}
 
-    console.log(`[NewsSync] Got ${html.length} bytes of HTML`);
-
-    // Extract message IDs from data-post attribute (very reliable)
-    const messageIds = [];
-    const idRe = /data-post="[^"\/]+\/(\d+)"/g;
-    let idMatch;
-    while ((idMatch = idRe.exec(html)) !== null) {
-      const id = parseInt(idMatch[1], 10);
-      if (!messageIds.includes(id)) messageIds.push(id);
-    }
-    console.log(`[NewsSync] Found ${messageIds.length} message IDs`);
-
-    function cleanHtml(raw) {
-      return raw
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"').replace(/&#34;/g, '"').replace(/&#39;/g, "'")
-        .replace(/&#\d+;/g, '').replace(/&[a-z]+;/g, '')
-        .replace(/https?:\/\/t\.me\/\S+/g, '')
-        .replace(/\s+$/, '')
-        .trim();
-    }
-
-    // Split HTML into per-message blocks by data-post attribute
-    const blocks = html.split(/(?=<div[^>]+data-post=")/);
-
+async function runNewsChannelSyncBotApi(botToken, channelId) {
+  try {
+    console.log('[NewsSync] Fetching via Bot API...');
     const db = getDb();
+
+    // Get the highest message_id we already have so we only fetch newer ones
+    const latest = db.prepare('SELECT MAX(message_id) as max_id FROM news_posts').get();
+    const afterId = (latest && latest.max_id) ? latest.max_id : 0;
+
+    // Telegram Bot API: getChatHistory isn't available for bots on channels directly.
+    // We use forwardMessages workaround: fetch updates the bot received.
+    // The correct approach: use getUpdates (works if bot is admin of channel).
+    const url = `https://api.telegram.org/bot${botToken}/getUpdates?limit=100&allowed_updates=["channel_post"]`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Bot API HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(`Bot API error: ${data.description}`);
+
+    const updates = data.result || [];
+    console.log(`[NewsSync] Got ${updates.length} updates from Bot API`);
+
     let saved = 0;
+    for (const update of updates) {
+      const message = update.channel_post;
+      if (!message) continue;
 
-    for (const block of blocks) {
-      // Extract message ID
-      const idMatch = /data-post="[^"\/]+\/(\d+)"/.exec(block);
-      if (!idMatch) continue;
-      const messageId = parseInt(idMatch[1], 10);
+      // Only process posts from our channel
+      const chatId = String(message.chat.id);
+      const chatUsername = message.chat.username;
+      if (chatId !== String(channelId) && chatUsername !== NEWS_CHANNEL.replace('@', '')) continue;
 
-      // Skip already saved posts
+      const messageId = message.message_id;
+      if (messageId <= afterId) continue;
+
       const existing = db.prepare('SELECT id FROM news_posts WHERE message_id = ?').get(messageId);
       if (existing) continue;
 
-      // Extract date — try multiple patterns
-      let isoDate = new Date().toISOString();
-      const datePatterns = [
-        /datetime="([^"]+)"/,
-        /data-time="(\d+)"/,
-      ];
-      for (const pat of datePatterns) {
-        const dm = pat.exec(block);
-        if (dm) {
-          // Could be ISO string or unix timestamp
-          const val = dm[1];
-          isoDate = /^\d+$/.test(val)
-            ? new Date(parseInt(val, 10) * 1000).toISOString()
-            : val;
-          break;
+      const text = (message.caption || message.text || '').replace(/https?:\/\/t\.me\/\S+/g, '').trim();
+
+      let photoFileId = null;
+      let hasVideo = 0;
+      let videoFileId = null;
+
+      if (message.photo && message.photo.length > 0) {
+        photoFileId = message.photo[message.photo.length - 1].file_id;
+      }
+      const videoObj = message.video || message.animation || message.video_note;
+      if (videoObj) {
+        hasVideo = 1;
+        videoFileId = videoObj.file_id;
+        if (!photoFileId) {
+          const thumb = videoObj.thumbnail || videoObj.thumb;
+          if (thumb) photoFileId = thumb.file_id;
         }
       }
 
-      // Extract text — try multiple class name patterns Telegram has used
-      let rawText = '';
-      const textPatterns = [
-        /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/,
-        /class="js-message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/,
-        /class="message_media_not_supported_wrap[^"]*"[^>]*>([\s\S]*?)<\/div>/,
-      ];
-      for (const pat of textPatterns) {
-        const tm = pat.exec(block);
-        if (tm) { rawText = cleanHtml(tm[1]); break; }
-      }
-      if (!rawText) continue;
+      if (!text && !hasVideo && !photoFileId) continue;
 
-      // Extract photo URL — try multiple patterns
-      let photoUrl = null;
-      const photoPatterns = [
-        /tgme_widget_message_photo_wrap[^>]+style="[^"]*url\('([^']+)'\)/,
-        /tgme_widget_message_photo[^>]+style="[^"]*url\('([^']+)'\)/,
-        /<img[^>]+class="[^"]*tgme[^"]*"[^>]+src="([^"]+)"/,
-      ];
-      for (const pat of photoPatterns) {
-        const pm = pat.exec(block);
-        if (pm) { photoUrl = pm[1]; break; }
-      }
+      const isoDate = new Date(message.date * 1000).toISOString();
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
       let photoCredit = null;
-      const creditLine = lines[lines.length - 1];
-      if (/^(צילום|קרדיט|photo credit|📷)/i.test(creditLine)) {
-        photoCredit = creditLine.replace(/^(צילום|קרדיט|photo credit|📷)[:\s]*/i, '').trim();
-        lines.pop();
+      if (lines.length) {
+        const creditLine = lines[lines.length - 1];
+        if (/^(צילום|קרדיט|photo credit|📷)/i.test(creditLine)) {
+          photoCredit = creditLine.replace(/^(צילום|קרדיט|photo credit|📷)[:\s]*/i, '').trim();
+          lines.pop();
+        }
       }
 
-      const title = cleanTitle(lines[0] || rawText.substring(0, 120));
-      const excerpt = lines.slice(1).join(' ').substring(0, 300) || title;
-      const category = detectCategory(rawText);
-      const isBreaking = /🚨|מבזק/.test(rawText) ? 1 : 0;
+      const title = text ? cleanTitle(lines[0] || text.substring(0, 120)) : (hasVideo ? 'סרטון' : 'עדכון');
+      const excerpt = text ? (lines.slice(1).join(' ').substring(0, 300) || title) : title;
+      const category = detectCategory(text);
+      const isBreaking = /🚨|מבזק/.test(text) ? 1 : 0;
 
       db.prepare(`
         INSERT OR IGNORE INTO news_posts
-          (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url, has_video, video_file_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        messageId, category, title, excerpt, rawText,
-        photoUrl, photoCredit, isoDate, isBreaking,
-        `https://t.me/${NEWS_CHANNEL}/${messageId}`
+        messageId, category, title, excerpt, text,
+        photoFileId, photoCredit, isoDate, isBreaking,
+        `https://t.me/${NEWS_CHANNEL}/${messageId}`,
+        hasVideo, videoFileId
       );
       saved++;
     }
 
     console.log(`[NewsSync] Done — ${saved} new post(s) saved`);
 
-    // Re-apply admin overrides (hidden/breaking/featured/edits) after every sync,
-    // because Render wipes the DB on restart and the scraper runs after applyOverrides on startup.
     const { applyOverrides } = require('./routes/news');
     await applyOverrides(db);
   } catch (err) {
