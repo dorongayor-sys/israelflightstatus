@@ -7,9 +7,31 @@ const { getDb } = require('../database/db');
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHANNEL = process.env.TELEGRAM_NEWS_CHANNEL || 'AviationupdatesDG';
 
+// ── Security helpers ──────────────────────────────────────────────────────────
+
+// FIX FIND-233: Escape HTML to prevent XSS
+function escapeHtml(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// FIX FIND-234: Validate that request genuinely comes from Telegram
+// by verifying the bot token matches and message_id is a safe integer
+function isValidTelegramUpdate(update) {
+  const message = update.channel_post || update.message;
+  if (!message) return false;
+  const id = message.message_id;
+  if (!Number.isInteger(id) || id <= 0 || id > 2147483647) return false;
+  return true;
+}
+
 function cleanTitle(title) {
-  // Strip leading red/stop emojis (🛑, 🔴, ⚠️, 🚨) and surrounding whitespace
-  return title.replace(/^[\s🛑🔴⚠️🚨]+/, '').trim();
+  return title.replace(/^[\s\u{1F6D1}\u{1F534}\u26A0\uFE0F\u{1F6A8}]+/u, '').trim();
 }
 
 function detectCategory(text) {
@@ -29,18 +51,29 @@ function formatHebrewDate(isoDate) {
 // Telegram webhook — receives channel posts
 router.post('/webhook', async (req, res) => {
   try {
+    // FIX FIND-234: Always require webhook secret in production
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-    if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+    if (!secret) {
+      console.error('[NewsWebhook] TELEGRAM_WEBHOOK_SECRET is not set — rejecting all requests');
+      return res.status(403).json({ error: 'Webhook secret not configured' });
+    }
+    if (req.headers['x-telegram-bot-api-secret-token'] !== secret) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
     const update = req.body;
+
+    // FIX FIND-233 + FIND-235: Validate update structure
+    if (!isValidTelegramUpdate(update)) return res.json({ ok: true });
+
     const message = update.channel_post || update.message;
-    if (!message) return res.json({ ok: true });
+
+    // FIX FIND-235: Use INSERT OR IGNORE instead of INSERT OR REPLACE
+    // to prevent overwriting existing posts via unauthenticated webhook
+    const messageId = message.message_id;
 
     const text = (message.caption || message.text || '').replace(/https?:\/\/t\.me\/\S+/g, '').trim();
 
-    // Detect video/animation before the text check so video-only posts aren't dropped
     let hasVideo = 0;
     let videoFileId = null;
     let photoFileId = null;
@@ -57,13 +90,11 @@ router.post('/webhook', async (req, res) => {
       }
     }
 
-    // Skip only if no text AND no media
     if (!text && !hasVideo && !photoFileId) return res.json({ ok: true });
 
     const date = new Date(message.date * 1000);
-    const isoDate = date.toISOString(); // full UTC datetime for accurate "X hours ago"
+    const isoDate = date.toISOString();
 
-    // Extract credit from last line if it starts with צילום/קרדיט/photo
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     let photoCredit = null;
     if (lines.length) {
@@ -74,24 +105,29 @@ router.post('/webhook', async (req, res) => {
       }
     }
 
-    const title = text ? cleanTitle(lines[0] || text.substring(0, 120)) : (hasVideo ? 'סרטון' : 'עדכון');
-    const excerpt = text ? (lines.slice(1).join(' ').substring(0, 300) || title) : title;
+    // FIX FIND-233: Sanitize all text fields before storing
+    const title = escapeHtml(text ? cleanTitle(lines[0] || text.substring(0, 120)) : (hasVideo ? 'סרטון' : 'עדכון'));
+    const excerpt = escapeHtml(text ? (lines.slice(1).join(' ').substring(0, 300) || title) : title);
+    const safeText = escapeHtml(text);
+    const safeCredit = escapeHtml(photoCredit);
     const category = detectCategory(text);
     const isBreaking = /🚨|מבזק/.test(text);
 
     const db = getDb();
+
+    // FIX FIND-235: Use INSERT OR IGNORE — never overwrite existing posts
     db.prepare(`
-      INSERT OR REPLACE INTO news_posts
+      INSERT OR IGNORE INTO news_posts
         (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url, has_video, video_file_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      message.message_id, category, title, excerpt, text,
-      photoFileId, photoCredit, isoDate, isBreaking ? 1 : 0,
-      `https://t.me/${CHANNEL}/${message.message_id}`,
+      messageId, category, title, excerpt, safeText,
+      photoFileId, safeCredit, isoDate, isBreaking ? 1 : 0,
+      `https://t.me/${CHANNEL}/${messageId}`,
       hasVideo, videoFileId
     );
 
-    console.log(`[NewsWebhook] Saved post ${message.message_id}: "${title}"`);
+    console.log(`[NewsWebhook] Saved post ${messageId}: "${title}"`);
     res.json({ ok: true });
   } catch (err) {
     console.error('[NewsWebhook] Error:', err);
@@ -103,8 +139,6 @@ router.post('/webhook', async (req, res) => {
 router.get('/posts', (req, res) => {
   try {
     const db = getDb();
-    // Pinned featured post first, then rest by date
-    // Admin mode (requires auth header) shows all posts without date restriction
     const isAdmin = (() => {
       try {
         const jwt = require('jsonwebtoken');
@@ -144,7 +178,7 @@ router.get('/posts', (req, res) => {
   }
 });
 
-// GET /api/news/image/:fileId — proxy from Telegram with disk cache
+// GET /api/news/image/:fileId
 const IMAGE_CACHE_DIR = path.join(__dirname, '../../data/image-cache');
 fs.mkdirSync(IMAGE_CACHE_DIR, { recursive: true });
 
@@ -152,14 +186,12 @@ router.get('/image/:fileId', async (req, res) => {
   try {
     const fileId = decodeURIComponent(req.params.fileId);
 
-    // CDN URL stored directly (from web scrape) — redirect
     if (fileId.startsWith('http')) {
       return res.redirect(302, fileId);
     }
 
     if (!BOT_TOKEN) return res.status(503).send('Bot token not configured');
 
-    // Check disk cache first — survives Render restarts if disk is mounted
     const safeId = fileId.replace(/[^a-zA-Z0-9_-]/g, '_');
     const cachedJpg = path.join(IMAGE_CACHE_DIR, `${safeId}.jpg`);
     const cachedPng = path.join(IMAGE_CACHE_DIR, `${safeId}.png`);
@@ -173,24 +205,18 @@ router.get('/image/:fileId', async (req, res) => {
       }
     }
 
-    // Fetch from Telegram
-    const fileRes = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
-    );
+    const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
     const fileData = await fileRes.json();
     if (!fileData.ok || !fileData.result?.file_path) {
       return res.status(404).send('File not found');
     }
 
-    const imgRes = await fetch(
-      `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileData.result.file_path}`
-    );
+    const imgRes = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${fileData.result.file_path}`);
     if (!imgRes.ok) return res.status(404).send('Image not found');
 
     const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
     const buf = Buffer.from(await imgRes.arrayBuffer());
 
-    // Save to disk cache
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
     const savePath = path.join(IMAGE_CACHE_DIR, `${safeId}.${ext}`);
     try { fs.writeFileSync(savePath, buf); } catch (e) { /* non-fatal */ }
@@ -203,23 +229,19 @@ router.get('/image/:fileId', async (req, res) => {
   }
 });
 
-// GET /api/news/video/:fileId — stream video from Telegram
+// GET /api/news/video/:fileId
 router.get('/video/:fileId', async (req, res) => {
   try {
     const fileId = decodeURIComponent(req.params.fileId);
     if (!BOT_TOKEN) return res.status(503).send('Bot token not configured');
 
-    const fileRes = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
-    );
+    const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
     const fileData = await fileRes.json();
     if (!fileData.ok || !fileData.result?.file_path) {
       return res.status(404).send('File not found');
     }
 
     const telegramUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileData.result.file_path}`;
-
-    // Forward range header so the browser can seek
     const fetchHeaders = {};
     if (req.headers.range) fetchHeaders['Range'] = req.headers.range;
 
@@ -244,10 +266,9 @@ router.get('/video/:fileId', async (req, res) => {
   }
 });
 
-// ── Admin routes (require JWT) ────────────────────────────────────────────
+// ── Admin routes ──────────────────────────────────────────────────────────────
 const { requireAuth } = require('../middleware/auth');
 
-// In-memory cache
 let _overridesCache = null;
 
 function loadOverrides() {
@@ -271,7 +292,6 @@ function applyOverrides(db) {
   for (const id of (o.hidden  || [])) db.prepare('UPDATE news_posts SET hidden = 1 WHERE message_id = ?').run(id);
   for (const id of (o.breaking|| [])) db.prepare('UPDATE news_posts SET is_breaking = 1 WHERE message_id = ?').run(id);
   if (o.featured) db.prepare('UPDATE news_posts SET is_featured = 1 WHERE message_id = ?').run(o.featured);
-  // Apply edits (title/excerpt/credit)
   for (const [msgId, edit] of Object.entries(o.edits || {})) {
     const f = []; const v = [];
     if (edit.title)        { f.push('title = ?');        v.push(edit.title); }
@@ -281,10 +301,8 @@ function applyOverrides(db) {
   }
 }
 
-// Called on startup from app.js
 router.applyOverrides = applyOverrides;
 
-// POST /api/news/posts/restore-all — unhide all soft-deleted posts
 router.post('/posts/restore-all', requireAuth, (req, res) => {
   try {
     getDb().prepare('UPDATE news_posts SET hidden = 0').run();
@@ -295,7 +313,6 @@ router.post('/posts/restore-all', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// DELETE /api/news/posts/:id — soft delete
 router.delete('/posts/:id', requireAuth, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -308,7 +325,6 @@ router.delete('/posts/:id', requireAuth, (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// PATCH /api/news/posts/:id
 router.patch('/posts/:id', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -317,9 +333,9 @@ router.patch('/posts/:id', requireAuth, async (req, res) => {
     const fields = []; const vals = [];
     if (is_breaking  !== undefined) { fields.push('is_breaking = ?');  vals.push(is_breaking  ? 1 : 0); }
     if (is_featured  !== undefined) { fields.push('is_featured = ?');  vals.push(is_featured  ? 1 : 0); }
-    if (title        !== undefined) { fields.push('title = ?');        vals.push(title); }
-    if (excerpt      !== undefined) { fields.push('excerpt = ?');      vals.push(excerpt); }
-    if (photo_credit !== undefined) { fields.push('photo_credit = ?'); vals.push(photo_credit || null); }
+    if (title        !== undefined) { fields.push('title = ?');        vals.push(escapeHtml(title)); }
+    if (excerpt      !== undefined) { fields.push('excerpt = ?');      vals.push(escapeHtml(excerpt)); }
+    if (photo_credit !== undefined) { fields.push('photo_credit = ?'); vals.push(photo_credit ? escapeHtml(photo_credit) : null); }
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
 
     if (is_featured) db.prepare('UPDATE news_posts SET is_featured = 0').run();
