@@ -101,11 +101,8 @@ router.post('/webhook', async (req, res) => {
       }
     }
 
-    // FIX FIND-233: Sanitize all text fields before storing
-    const title = escapeHtml(text ? cleanTitle(lines[0] || text.substring(0, 120)) : (hasVideo ? 'סרטון' : 'עדכון'));
-    const excerpt = escapeHtml(text ? (lines.slice(1).join(' ').substring(0, 300) || title) : title);
-    const safeText = escapeHtml(text);
-    const safeCredit = escapeHtml(photoCredit);
+    const title = text ? cleanTitle(lines[0] || text.substring(0, 120)) : (hasVideo ? 'סרטון' : 'עדכון');
+    const excerpt = text ? (lines.slice(1).join(' ').substring(0, 300) || title) : title;
     const category = detectCategory(text);
     const isBreaking = /🚨|מבזק/.test(text);
 
@@ -117,8 +114,8 @@ router.post('/webhook', async (req, res) => {
         (message_id, category, title, excerpt, full_text, photo_file_id, photo_credit, post_date, is_breaking, telegram_url, has_video, video_file_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      messageId, category, title, excerpt, safeText,
-      photoFileId, safeCredit, isoDate, isBreaking ? 1 : 0,
+      messageId, category, title, excerpt, text,
+      photoFileId, photoCredit, isoDate, isBreaking ? 1 : 0,
       `https://t.me/${CHANNEL}/${messageId}`,
       hasVideo, videoFileId
     );
@@ -329,9 +326,9 @@ router.patch('/posts/:id', requireAuth, async (req, res) => {
     const fields = []; const vals = [];
     if (is_breaking  !== undefined) { fields.push('is_breaking = ?');  vals.push(is_breaking  ? 1 : 0); }
     if (is_featured  !== undefined) { fields.push('is_featured = ?');  vals.push(is_featured  ? 1 : 0); }
-    if (title        !== undefined) { fields.push('title = ?');        vals.push(escapeHtml(title)); }
-    if (excerpt      !== undefined) { fields.push('excerpt = ?');      vals.push(escapeHtml(excerpt)); }
-    if (photo_credit !== undefined) { fields.push('photo_credit = ?'); vals.push(photo_credit ? escapeHtml(photo_credit) : null); }
+    if (title        !== undefined) { fields.push('title = ?');        vals.push(title); }
+    if (excerpt      !== undefined) { fields.push('excerpt = ?');      vals.push(excerpt); }
+    if (photo_credit !== undefined) { fields.push('photo_credit = ?'); vals.push(photo_credit || null); }
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
 
     if (is_featured) db.prepare('UPDATE news_posts SET is_featured = 0').run();
