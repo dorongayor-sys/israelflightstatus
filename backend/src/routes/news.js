@@ -351,3 +351,4 @@ router.patch('/posts/:id', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.applyOverrides = applyOverrides;
