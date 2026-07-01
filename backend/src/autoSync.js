@@ -22,23 +22,19 @@ function detectCategory(text) {
 
 async function runNewsChannelSync() {
   const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  const CHANNEL_ID = process.env.TELEGRAM_NEWS_CHANNEL_ID; // numeric chat ID e.g. -1001234567890
+  const CHANNEL_ID = process.env.TELEGRAM_NEWS_CHANNEL_ID;
 
-  // ── Strategy 1: Bot API (reliable, needs bot token + channel ID) ──────────
   if (BOT_TOKEN && CHANNEL_ID) {
     await runNewsChannelSyncBotApi(BOT_TOKEN, CHANNEL_ID);
     return;
   }
 
-  // ── Strategy 2: Webhook-only (posts arrive via /api/news/webhook) ─────────
-  // If no bot token or channel ID, posts come in through the Telegram webhook.
-  // Nothing to do here — just log and re-apply overrides.
   console.log('[NewsSync] No BOT_TOKEN+CHANNEL_ID — relying on webhook for new posts');
   try {
-    const { applyOverrides } = require('./routes/news');
-    await applyOverrides(getDb());
+    const newsRouter = require('./routes/news');
+    if (typeof newsRouter.applyOverrides === 'function') newsRouter.applyOverrides(getDb());
   } catch (err) {
-    console.error(`[NewsSync] applyOverrides error: ${err.message}`);
+    console.error(`[NewsSync] applyOverrides error: ${err && err.message ? err.message : String(err)}`);
   }
 }
 
@@ -47,13 +43,9 @@ async function runNewsChannelSyncBotApi(botToken, channelId) {
     console.log('[NewsSync] Fetching via Bot API...');
     const db = getDb();
 
-    // Get the highest message_id we already have so we only fetch newer ones
     const latest = db.prepare('SELECT MAX(message_id) as max_id FROM news_posts').get();
     const afterId = (latest && latest.max_id) ? latest.max_id : 0;
 
-    // Telegram Bot API: getChatHistory isn't available for bots on channels directly.
-    // We use forwardMessages workaround: fetch updates the bot received.
-    // The correct approach: use getUpdates (works if bot is admin of channel).
     const url = `https://api.telegram.org/bot${botToken}/getUpdates?limit=100&allowed_updates=["channel_post"]`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Bot API HTTP ${res.status}`);
@@ -69,7 +61,6 @@ async function runNewsChannelSyncBotApi(botToken, channelId) {
       const message = update.channel_post;
       if (!message) continue;
 
-      // Only process posts from our channel
       const chatId = String(message.chat.id);
       const chatUsername = message.chat.username;
       if (chatId !== String(channelId) && chatUsername !== NEWS_CHANNEL.replace('@', '')) continue;
@@ -133,10 +124,10 @@ async function runNewsChannelSyncBotApi(botToken, channelId) {
 
     console.log(`[NewsSync] Done — ${saved} new post(s) saved`);
 
-    const { applyOverrides } = require('./routes/news');
-    await applyOverrides(db);
+    const newsRouter = require('./routes/news');
+    if (typeof newsRouter.applyOverrides === 'function') newsRouter.applyOverrides(db);
   } catch (err) {
-    console.error(`[NewsSync] Error: ${err.message}`);
+    console.error(`[NewsSync] Error: ${err && err.message ? err.message : String(err)}`);
   }
 }
 
@@ -144,10 +135,7 @@ async function runNewsChannelSyncBotApi(botToken, channelId) {
 
 const TELEGRAM_CHANNEL_URL = 'https://t.me/s/iaarashut';
 
-// Airline name substrings (Hebrew + English, lowercase) → IATA code.
-// Checked against the message text case-insensitively.
 const TELEGRAM_AIRLINE_MAP = [
-  // Hebrew names / partial names
   ['טוס איירווייז', 'U8'],
   ['טוס', 'U8'],
   ['אתיחאד', 'EY'],
@@ -178,8 +166,7 @@ const TELEGRAM_AIRLINE_MAP = [
   ['סייפרוס', 'CY'],
   ['בלו בירד', 'BZ'],
   ['אנימה', 'IO'],
-  ['ג\'ורג\'יאן', 'A9'],
-  // English names (matched case-insensitively)
+  ["ג'ורג'יאן", 'A9'],
   ['tus airways', 'U8'],
   ['etihad', 'EY'],
   ['ethiopian', 'ET'],
@@ -214,7 +201,6 @@ const TELEGRAM_AIRLINE_MAP = [
   ['anima wings', 'IO'],
 ];
 
-// Parse date format DD.M.YY or DD.M.YYYY (as used in Telegram posts)
 function parseTelegramDate(str) {
   const m = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
   if (!m) return null;
@@ -226,14 +212,11 @@ function parseTelegramDate(str) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-// Extract plain-text message blocks from Telegram web page HTML
 function extractTelegramMessages(html) {
   const messages = [];
-  // Telegram wraps each message text in <div class="tgme_widget_message_text ...">
   const re = /class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/g;
   let m;
   while ((m = re.exec(html)) !== null) {
-    // Convert <br> to newlines, strip remaining tags
     const text = m[1]
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<[^>]+>/g, '')
@@ -247,8 +230,6 @@ function extractTelegramMessages(html) {
   return messages;
 }
 
-// Find (iata, date) pairs within a single message text.
-// Strategy: split into lines; each line with a DD.M.YY date may name airline(s).
 function parseAirlineDatePairs(messageText) {
   const pairs = [];
   const lines = messageText.split(/\n/);
@@ -264,11 +245,9 @@ function parseAirlineDatePairs(messageText) {
       }
     }
 
-    // Also try bare IATA/ICAO codes in parentheses like "(VBB)", "(QS)", etc.
     const codeMatches = line.matchAll(/\(([A-Z0-9]{2,4})\)/g);
     for (const cm of codeMatches) {
       const code = cm[1];
-      // Only add if not already covered by the name map above
       if (!pairs.some((p) => p.iata === code && p.date === date)) {
         pairs.push({ iata: code, date });
       }
@@ -291,7 +270,6 @@ async function runTelegramSync() {
       return;
     }
 
-    // Collect the LATEST date per airline across all messages (old messages must not win)
     const latestByIata = new Map();
     for (const msg of messages) {
       const pairs = parseAirlineDatePairs(msg);
@@ -310,7 +288,6 @@ async function runTelegramSync() {
       ).get(iata);
       if (!airline) continue;
 
-      // Never move the date backwards
       if (airline.cancellation_end_date && date < airline.cancellation_end_date) continue;
 
       if (airline.cancellation_end_date !== date) {
@@ -325,7 +302,7 @@ async function runTelegramSync() {
     console.log(`[TelegramSync] Done — ${updated} update(s)`);
     db.prepare("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('last_sync', datetime('now') || 'Z')").run();
   } catch (err) {
-    console.error(`[TelegramSync] Error: ${err.message}`);
+    console.error(`[TelegramSync] Error: ${err && err.message ? err.message : String(err)}`);
   }
 }
 
@@ -333,7 +310,6 @@ async function runTelegramSync() {
 
 const INFOGRAM_URL = 'https://e.infogram.com/e0e8f39e-cc26-408a-bc98-8f73c2b9bb5d';
 
-// Hebrew name (as it appears in the Infogram) → IATA code
 const HEBREW_TO_IATA = {
   'אייר פראנס':       'AF',
   'אתיחאד':           'EY',
@@ -384,7 +360,6 @@ function parseInfogramDate(str) {
 }
 
 function extractAirlineDates(html) {
-  // Regex extracts pairs like ["Hebrew name","DD.M"] directly from the raw JSON
   const datePattern = /\d{1,2}\.\d{1,2}|אין צפי|סוף מאי/;
   const re = /"([\u05D0-\u05FA\w\s']+)"\s*,\s*"([^"]{1,20})"/g;
   const results = new Map();
@@ -393,7 +368,7 @@ function extractAirlineDates(html) {
     const name = m[1].trim();
     const val  = m[2].trim();
     if (HEBREW_TO_IATA[name] && datePattern.test(val)) {
-      results.set(name, val); // Map deduplicates repeated occurrences
+      results.set(name, val);
     }
   }
   return results;
@@ -418,14 +393,13 @@ async function runMakoSync() {
     for (const [hebrewName, dateStr] of pairs) {
       const iata = HEBREW_TO_IATA[hebrewName];
       const newDate = parseInfogramDate(dateStr);
-      if (!newDate) continue; // "no forecast" etc. — skip
+      if (!newDate) continue;
 
       const airline = db.prepare(
         'SELECT * FROM airlines WHERE iata_code = ? AND sync_locked = 0'
       ).get(iata);
       if (!airline) continue;
 
-      // Never move the date backwards
       if (airline.cancellation_end_date && newDate < airline.cancellation_end_date) continue;
 
       if (airline.cancellation_end_date !== newDate) {
@@ -440,13 +414,13 @@ async function runMakoSync() {
     console.log(`[MakoSync] Done — ${updated} date(s) updated`);
     db.prepare("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('last_sync', datetime('now') || 'Z')").run();
   } catch (err) {
-    console.error(`[MakoSync] Error: ${err.message}`);
+    console.error(`[MakoSync] Error: ${err && err.message ? err.message : String(err)}`);
   }
 }
 
 function runDateBasedStatusSync() {
   try {
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = new Date().toISOString().slice(0, 10);
     const db = getDb();
 
     const due = db.prepare(`
@@ -470,7 +444,7 @@ function runDateBasedStatusSync() {
       console.log(`[DateSync] ${airline.name}: not_flying → flying (date ${airline.cancellation_end_date} reached)`);
     }
   } catch (err) {
-    console.error(`[DateSync] Error: ${err.message}`);
+    console.error(`[DateSync] Error: ${err && err.message ? err.message : String(err)}`);
   }
 }
 
@@ -479,8 +453,6 @@ function runDateBasedStatusSync() {
 const ESHET_URL = 'https://www.eshet.com/guide/war-flight-changes-and-cancellations/';
 const ESHET_INTERVAL_MS = 15 * 60 * 1000;
 
-// Each entry: [pattern (Hebrew or English, matched case-insensitively), IATA code]
-// Lufthansa Group has 5 entries so all subsidiaries get updated together.
 const ESHET_AIRLINE_MAP = [
   ['אגיאן', 'A3'],
   ['aegean', 'A3'],
@@ -536,7 +508,6 @@ const ESHET_AIRLINE_MAP = [
   ['פלייוואן', '5F'],
   ['פליי וואן', '5F'],
   ['flyone', '5F'],
-  // Lufthansa Group → update all 5 subsidiaries
   ['לופטהנזה', 'LH'],
   ['לופטהנזה', 'LX'],
   ['לופטהנזה', 'OS'],
@@ -553,7 +524,6 @@ const ESHET_AIRLINE_MAP = [
 
 function parseEshetDate(str) {
   if (!str) return null;
-  // DD.M.YY or DD.M.YYYY
   let m = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
   if (m) {
     const day = parseInt(m[1], 10);
@@ -563,7 +533,6 @@ function parseEshetDate(str) {
     if (month < 1 || month > 12 || day < 1 || day > 31) return null;
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
-  // DD.M (no year)
   m = str.match(/(\d{1,2})\.(\d{1,2})/);
   if (!m) return null;
   const day = parseInt(m[1], 10);
@@ -587,7 +556,7 @@ function extractEshetParagraphs(html) {
       .replace(/&gt;/g, '>')
       .replace(/&#\d+;/g, '')
       .replace(/&[a-z]+;/g, '')
-      .replace(/\u05F3/g, "'") // normalize Hebrew geresh → apostrophe
+      .replace(/\u05F3/g, "'")
       .trim();
     if (text) results.push(text);
   }
@@ -611,7 +580,6 @@ async function runEshetSync() {
     let updated = 0;
 
     for (const text of paragraphs) {
-      // Skip entries that indicate the airline is already flying
       if (/מפעיל|החל מ|חוזר לטוס|חידש|חזרה לפעילות/i.test(text)) continue;
 
       const date = parseEshetDate(text);
@@ -626,7 +594,6 @@ async function runEshetSync() {
         ).get(iata);
         if (!airline) continue;
 
-        // Never move the date backwards
         if (airline.cancellation_end_date && date < airline.cancellation_end_date) continue;
 
         if (airline.cancellation_end_date !== date) {
@@ -642,7 +609,7 @@ async function runEshetSync() {
     console.log(`[EshetSync] Done — ${updated} update(s)`);
     db.prepare("INSERT OR REPLACE INTO sync_meta (key, value) VALUES ('last_sync', datetime('now') || 'Z')").run();
   } catch (err) {
-    console.error(`[EshetSync] Error: ${err.message}`);
+    console.error(`[EshetSync] Error: ${err && err.message ? err.message : String(err)}`);
   }
 }
 
