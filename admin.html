@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול עדכוני תעופה</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; direction: rtl; }
+
+  /* Login */
+  #loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  .login-box { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 40px; width: 100%; max-width: 380px; }
+  .login-box h1 { font-size: 1.4rem; margin-bottom: 8px; color: #f1f5f9; }
+  .login-box p { color: #94a3b8; font-size: .85rem; margin-bottom: 28px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: .8rem; color: #94a3b8; margin-bottom: 6px; }
+  .form-group input { width: 100%; padding: 10px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9; font-size: .95rem; outline: none; }
+  .form-group input:focus { border-color: #3b82f6; }
+  .btn-primary { width: 100%; padding: 11px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600; margin-top: 4px; }
+  .btn-primary:hover { background: #2563eb; }
+  .error-msg { color: #f87171; font-size: .85rem; margin-top: 12px; min-height: 20px; }
+
+  /* Admin panel */
+  #adminPanel { display: none; }
+  .top-bar { background: #1e293b; border-bottom: 1px solid #334155; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .top-bar h1 { font-size: 1.1rem; color: #f1f5f9; }
+  .top-bar-actions { display: flex; gap: 10px; align-items: center; }
+  .btn-sm { padding: 7px 14px; border-radius: 7px; font-size: .82rem; cursor: pointer; border: none; font-weight: 600; }
+  .btn-logout { background: #334155; color: #94a3b8; }
+  .btn-logout:hover { background: #475569; color: #f1f5f9; }
+
+  .content { padding: 24px; max-width: 900px; margin: 0 auto; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; background: #1e293b; border: 1px solid #334155; padding: 4px; border-radius: 10px; width: fit-content; margin-bottom: 24px; }
+  .tab-btn { padding: 8px 20px; border-radius: 7px; font-size: .88rem; font-weight: 600; cursor: pointer; border: none; background: none; color: #64748b; transition: all .15s; }
+  .tab-btn.active { background: #3b82f6; color: #fff; }
+  .tab-btn:not(.active):hover { color: #e2e8f0; background: #334155; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Stats bar */
+  .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 20px; flex: 1; min-width: 110px; }
+  .stat-card .num { font-size: 1.6rem; font-weight: 700; color: #3b82f6; }
+  .stat-card .lbl { font-size: .75rem; color: #64748b; margin-top: 2px; }
+
+  /* Post list */
+  .posts-list { display: flex; flex-direction: column; gap: 10px; }
+  .post-item { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; }
+  .post-item.breaking { border-color: #ef4444; }
+  .post-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #0f172a; }
+  .post-info { flex: 1; min-width: 0; }
+  .post-title { font-size: .95rem; font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+  .post-excerpt { font-size: .8rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post-meta { font-size: .75rem; color: #475569; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: .7rem; font-weight: 600; }
+  .badge-breaking { background: #7f1d1d; color: #fca5a5; }
+  .badge-cat { background: #1e3a5f; color: #93c5fd; }
+  .post-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+  .btn-delete { background: #7f1d1d; color: #fca5a5; border: none; border-radius: 7px; padding: 7px 12px; font-size: .78rem; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn-delete:hover { background: #991b1b; }
+  .btn-toggle { border: none; border-radius: 7px; padding: 7px 12px; font-size: .78rem; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn-toggle.on  { background: #7f1d1d; color: #fca5a5; }
+  .btn-toggle.off { background: #164e35; color: #6ee7b7; }
+  .btn-toggle.on:hover  { background: #991b1b; }
+  .btn-toggle.off:hover { background: #166534; }
+
+  /* Ticker tab */
+  .ticker-info { background: #1d2d1a; border: 1px solid #2d5a26; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-size: .85rem; color: #86efac; line-height: 1.6; }
+  .ticker-info strong { color: #4ade80; }
+  .ticker-list { display: flex; flex-direction: column; gap: 8px; }
+  .ticker-item { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .ticker-item:hover { border-color: #475569; }
+  .ticker-num { font-size: .75rem; font-weight: 700; color: #475569; flex-shrink: 0; width: 20px; text-align: center; }
+  .ticker-text { flex: 1; min-width: 0; }
+  .ticker-title { font-size: .9rem; font-weight: 600; color: #f1f5f9; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ticker-date { font-size: .72rem; color: #475569; }
+  .ticker-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-edit-ticker { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; border-radius: 6px; padding: 6px 12px; font-size: .78rem; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn-edit-ticker:hover { background: #1d4ed8; color: #fff; }
+  .btn-remove-ticker { background: #3d1515; color: #fca5a5; border: 1px solid #7f1d1d; border-radius: 6px; padding: 6px 12px; font-size: .78rem; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn-remove-ticker:hover { background: #7f1d1d; }
+
+  /* Inline title edit */
+  .ticker-edit-row { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0; }
+  .ticker-edit-input { flex: 1; min-width: 0; background: #0f172a; border: 1px solid #3b82f6; border-radius: 6px; color: #f1f5f9; padding: 6px 10px; font-size: .88rem; outline: none; font-family: inherit; direction: rtl; }
+  .btn-save-ticker { background: #3b82f6; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: .78rem; cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn-save-ticker:hover { background: #2563eb; }
+  .btn-cancel-ticker { background: #334155; color: #94a3b8; border: none; border-radius: 6px; padding: 6px 10px; font-size: .78rem; cursor: pointer; font-weight: 600; }
+
+  /* Edit modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 28px; width: 100%; max-width: 520px; }
+  .modal h2 { font-size: 1.05rem; margin-bottom: 20px; color: #f1f5f9; }
+  .modal textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9; padding: 10px 12px; font-size: .9rem; resize: vertical; outline: none; font-family: inherit; direction: rtl; }
+  .modal textarea:focus { border-color: #3b82f6; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+  .btn-cancel { background: #334155; color: #94a3b8; border: none; border-radius: 7px; padding: 9px 18px; cursor: pointer; font-weight: 600; }
+  .btn-save { background: #3b82f6; color: #fff; border: none; border-radius: 7px; padding: 9px 18px; cursor: pointer; font-weight: 600; }
+  .btn-save:hover { background: #2563eb; }
+
+  .loading { text-align: center; color: #475569; padding: 40px; }
+  .no-posts { text-align: center; color: #475569; padding: 40px; }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .content { padding: 16px; }
+    .post-item { flex-wrap: wrap; }
+    .post-thumb { width: 48px; height: 48px; }
+    .post-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+    .ticker-item { flex-wrap: wrap; gap: 8px; }
+    .ticker-actions { width: 100%; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>ניהול עדכוני תעופה ✈</h1>
+    <p>התחבר כדי לנהל את האתר</p>
+    <div class="form-group">
+      <label>שם משתמש</label>
+      <input type="text" id="username" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label>סיסמה</label>
+      <input type="password" id="password" autocomplete="current-password" />
+    </div>
+    <button class="btn-primary" onclick="login()">התחבר</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+  <div class="top-bar">
+    <h1>✈ ניהול עדכוני תעופה</h1>
+    <div class="top-bar-actions">
+      <span id="welcomeMsg" style="color:#64748b;font-size:.85rem;"></span>
+      <button class="btn-sm" style="background:#166534;color:#6ee7b7;font-weight:700;" onclick="restoreAll()">♻️ שחזר הכל</button>
+      <button class="btn-sm btn-logout" onclick="logout()">התנתק</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats" id="statsBar"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('ticker')">📺 פס מבזקים</button>
+      <button class="tab-btn" onclick="switchTab('posts')">📰 כל הפוסטים</button>
+    </div>
+
+    <!-- Ticker Tab -->
+    <div class="tab-pane active" id="tab-ticker">
+      <div class="ticker-info">
+        <strong>פס המבזקים הגולל</strong> מציג את כותרות כל הפוסטים.<br>
+        לחץ <strong>✏️ ערוך כותרת</strong> כדי לקצר טקסט בפס · לחץ <strong>🗑 הסר</strong> כדי להסיר פוסט לגמרי מהאתר ומהפס.
+      </div>
+      <div class="ticker-list" id="tickerList"><div class="loading">טוען...</div></div>
+    </div>
+
+    <!-- Posts Tab -->
+    <div class="tab-pane" id="tab-posts">
+      <div class="posts-list" id="postsList"><div class="loading">טוען פוסטים...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>עריכת פוסט</h2>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>כותרת (מופיעה גם בפס המבזקים)</label>
+      <textarea id="editTitle" rows="2"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>תקציר</label>
+      <textarea id="editExcerpt" rows="4"></textarea>
+    </div>
+    <div class="form-group">
+      <label>קרדיט תמונה</label>
+      <textarea id="editCredit" rows="1" placeholder="לדוגמה: דובר צה״ל"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">ביטול</button>
+      <button class="btn-save" onclick="saveEdit()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://israelflightstatus.onrender.com';
+let TOKEN = localStorage.getItem('admin_token') || '';
+let editingId = null;
+let POSTS = [];
+
+/* ── Tabs ── */
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ── Auth ── */
+async function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  document.getElementById('loginError').textContent = '';
+  try {
+    const r = await fetch(`${API}/api/auth/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (!r.ok) { document.getElementById('loginError').textContent = d.error; return; }
+    TOKEN = d.token;
+    localStorage.setItem('admin_token', TOKEN);
+    showPanel(d.username);
+  } catch { document.getElementById('loginError').textContent = 'שגיאת חיבור'; }
+}
+
+function logout() {
+  TOKEN = '';
+  localStorage.removeItem('admin_token');
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function authHeader() { return { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }; }
+
+function showPanel(username) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+  document.getElementById('welcomeMsg').textContent = `שלום, ${username}`;
+  loadPosts();
+}
+
+/* ── Load ── */
+async function loadPosts() {
+  document.getElementById('tickerList').innerHTML = '<div class="loading">טוען...</div>';
+  document.getElementById('postsList').innerHTML = '<div class="loading">טוען פוסטים...</div>';
+  const r = await fetch(`${API}/api/news/posts`);
+  POSTS = await r.json();
+  renderStats();
+  renderTicker();
+  renderPosts();
+}
+
+function renderStats() {
+  const breaking = POSTS.filter(p => p.breaking).length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card"><div class="num">${POSTS.length}</div><div class="lbl">פוסטים בפס</div></div>
+    <div class="stat-card"><div class="num">${breaking}</div><div class="lbl">מבזקים</div></div>
+    <div class="stat-card"><div class="num">${POSTS.filter(p=>p.photoFileId).length}</div><div class="lbl">עם תמונה</div></div>
+  `;
+}
+
+/* ── Ticker Tab ── */
+function renderTicker() {
+  const el = document.getElementById('tickerList');
+  if (!POSTS.length) { el.innerHTML = '<div class="no-posts">אין פוסטים</div>'; return; }
+  el.innerHTML = POSTS.map((p, i) => `
+    <div class="ticker-item" id="ticker-${p.id}">
+      <div class="ticker-num">${i + 1}</div>
+      <div class="ticker-text" id="ticker-text-${p.id}">
+        <div class="ticker-title">${esc(p.title)}</div>
+        <div class="ticker-date">${p.displayDate}${p.breaking ? ' · <span style="color:#f87171">מבזק</span>' : ''}</div>
+      </div>
+      <div class="ticker-actions" id="ticker-actions-${p.id}">
+        <button class="btn-edit-ticker" onclick="startTickerEdit(${p.id})">✏️ ערוך כותרת</button>
+        <button class="btn-remove-ticker" onclick="removeFromTicker(${p.id})">🗑 הסר</button>
+      </div>
+    </div>`).join('');
+}
+
+function startTickerEdit(id) {
+  const post = POSTS.find(p => p.id === id);
+  if (!post) return;
+  const textEl = document.getElementById('ticker-text-' + id);
+  const actionsEl = document.getElementById('ticker-actions-' + id);
+  textEl.innerHTML = `
+    <div class="ticker-edit-row">
+      <input class="ticker-edit-input" id="ticker-input-${id}" value="${esc(post.title)}" />
+    </div>
+    <div class="ticker-date">${post.displayDate}</div>`;
+  actionsEl.innerHTML = `
+    <button class="btn-save-ticker" onclick="saveTickerEdit(${id})">שמור</button>
+    <button class="btn-cancel-ticker" onclick="renderTicker()">ביטול</button>`;
+  const inp = document.getElementById('ticker-input-' + id);
+  inp.focus();
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveTickerEdit(id); if (e.key === 'Escape') renderTicker(); });
+}
+
+async function saveTickerEdit(id) {
+  const inp = document.getElementById('ticker-input-' + id);
+  if (!inp) return;
+  const newTitle = inp.value.trim();
+  if (!newTitle) return;
+  const r = await fetch(`${API}/api/news/posts/${id}`, {
+    method: 'PATCH', headers: authHeader(),
+    body: JSON.stringify({ title: newTitle })
+  });
+  if (r.ok) {
+    POSTS = POSTS.map(p => p.id === id ? { ...p, title: newTitle } : p);
+    renderTicker();
+    renderPosts();
+  } else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+async function removeFromTicker(id) {
+  if (!confirm('להסיר פוסט זה לגמרי מהאתר ומפס המבזקים?')) return;
+  const r = await fetch(`${API}/api/news/posts/${id}`, { method: 'DELETE', headers: authHeader() });
+  if (r.ok) { POSTS = POSTS.filter(p => p.id !== id); renderStats(); renderTicker(); renderPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+/* ── Posts Tab ── */
+function renderPosts() {
+  const el = document.getElementById('postsList');
+  if (!POSTS.length) { el.innerHTML = '<div class="no-posts">אין פוסטים</div>'; return; }
+  el.innerHTML = POSTS.map(p => {
+    const imgHtml = p.photoFileId
+      ? `<img class="post-thumb" src="${API}/api/news/image/${encodeURIComponent(p.photoFileId)}" alt="" />`
+      : `<div class="post-thumb"></div>`;
+    return `
+      <div class="post-item ${p.breaking ? 'breaking' : ''}" id="post-${p.id}">
+        ${imgHtml}
+        <div class="post-info">
+          <div class="post-title">${esc(p.title)}</div>
+          <div class="post-excerpt">${esc(p.excerpt)}</div>
+          <div class="post-meta">
+            <span>${p.displayDate}</span>
+            <span class="badge badge-cat">${p.category}</span>
+            ${p.breaking ? '<span class="badge badge-breaking">🚨 מבזק</span>' : ''}
+          </div>
+        </div>
+        <div class="post-actions">
+          <button class="btn-toggle ${p.featured ? 'on' : 'off'}" style="${p.featured ? 'background:#78350f;color:#fde68a;' : 'background:#1e293b;color:#94a3b8;border:1px solid #334155;'}" onclick="toggleFeatured(${p.id}, ${p.featured})">
+            ${p.featured ? '⭐ ראשי' : '☆ סמן ראשי'}
+          </button>
+          <button class="btn-toggle ${p.breaking ? 'on' : 'off'}" onclick="toggleBreaking(${p.id}, ${p.breaking})">
+            ${p.breaking ? '🚨 הסר מבזק' : '➕ סמן מבזק'}
+          </button>
+          <button class="btn-sm btn-delete" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;" onclick="openEdit(${p.id})">✏️ עריכה</button>
+          <button class="btn-delete" onclick="deletePost(${p.id})">🗑 מחק</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Post Actions ── */
+async function deletePost(id) {
+  if (!confirm('למחוק את הפוסט הזה?')) return;
+  const r = await fetch(`${API}/api/news/posts/${id}`, { method: 'DELETE', headers: authHeader() });
+  if (r.ok) { POSTS = POSTS.filter(p => p.id !== id); renderStats(); renderTicker(); renderPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+async function toggleFeatured(id, current) {
+  if (!current && !confirm('לסמן פוסט זה ככותרת ראשית? הפוסט הנוכחי יוסר מהראשי.')) return;
+  const r = await fetch(`${API}/api/news/posts/${id}`, {
+    method: 'PATCH', headers: authHeader(),
+    body: JSON.stringify({ is_featured: !current })
+  });
+  if (r.ok) { await loadPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+async function toggleBreaking(id, current) {
+  const r = await fetch(`${API}/api/news/posts/${id}`, {
+    method: 'PATCH', headers: authHeader(),
+    body: JSON.stringify({ is_breaking: !current })
+  });
+  if (r.ok) { await loadPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+function openEdit(id) {
+  const post = POSTS.find(p => p.id === id);
+  if (!post) return;
+  editingId = id;
+  document.getElementById('editTitle').value = post.title;
+  document.getElementById('editExcerpt').value = post.excerpt;
+  document.getElementById('editCredit').value = post.photoCredit || '';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeModal() {
+  editingId = null;
+  document.getElementById('editModal').classList.remove('open');
+}
+
+async function saveEdit() {
+  const title = document.getElementById('editTitle').value.trim();
+  const excerpt = document.getElementById('editExcerpt').value.trim();
+  const photo_credit = document.getElementById('editCredit').value.trim();
+  const r = await fetch(`${API}/api/news/posts/${editingId}`, {
+    method: 'PATCH', headers: authHeader(),
+    body: JSON.stringify({ title, excerpt, photo_credit })
+  });
+  if (r.ok) { closeModal(); await loadPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+/* ── Restore all hidden posts ── */
+async function restoreAll() {
+  if (!confirm('לשחזר את כל הפוסטים שנמחקו?')) return;
+  const r = await fetch(`${API}/api/news/posts/restore-all`, { method: 'POST', headers: authHeader() });
+  if (r.ok) { alert('כל הפוסטים שוחזרו!'); await loadPosts(); }
+  else { const d = await r.json(); alert(d.error || 'שגיאה'); }
+}
+
+/* ── Keyboard shortcuts ── */
+document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── Auto-login ── */
+if (TOKEN) {
+  try {
+    const payload = JSON.parse(atob(TOKEN.split('.')[1]));
+    if (payload.exp * 1000 > Date.now()) { showPanel(payload.username); }
+    else { TOKEN = ''; localStorage.removeItem('admin_token'); }
+  } catch { TOKEN = ''; localStorage.removeItem('admin_token'); }
+}
+</script>
+</body>
+</html>
