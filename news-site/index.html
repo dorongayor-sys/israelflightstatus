@@ -15,6 +15,16 @@
   <title>עדכוני תעופה - האתר הרשמי</title>
   <meta name="description" content="מודיעין תעופה בזמן אמת על ישראל והאזור. תעופה צבאית, טיסות אזרחיות, פעילות נמל תעופה וחדשות שוברות.">
   <meta name="google-site-verification" content="eoxj2HS2dsoij3GSSZyhJOWN4MZEZH8y_CZne7bbZOw" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="עדכוני תעופה" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -182,5 +192,16 @@
   </footer>
 
   <script src="app.js"></script>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.error('SW error:', err));
+      });
+    }
+  </script>
 </body>
 </html>
