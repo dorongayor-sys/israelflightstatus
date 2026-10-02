@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="utf-8">
+<script>
+  // GitHub Pages SPA redirect — preserve tracker paths for React Router
+  var path = window.location.pathname;
+  var repo = '/israelflightstatus';
+  var base = path.indexOf(repo) === 0 ? repo : '';
+  if (path.indexOf(base + '/tracker/') === 0) {
+    sessionStorage.setItem('ghpages_path', path.slice(base.length));
+    window.location.replace(base + '/tracker/');
+  } else {
+    window.location.replace(base + '/');
+  }
+</script>
+</head>
+<body></body>
+</html>
